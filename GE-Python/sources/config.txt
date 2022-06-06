@@ -1,0 +1,2 @@
+db_path /Users/andrerico/hall/igem/ge/database/ge.db
+psa_path /Users/andrerico/hall/igem/ge/psa
