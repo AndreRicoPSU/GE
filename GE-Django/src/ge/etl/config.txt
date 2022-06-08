@@ -1,2 +1,2 @@
-db_path /Users/andrerico/hall/igem/ge/database/ge.db
-psa_path /Users/andrerico/hall/igem/ge/psa
+db_path /Users/andrerico/dev/ge/teste/src/db.sqlite3
+psa_path /Users/andrerico/dev/ge/teste/src/ge/psa

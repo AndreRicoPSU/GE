@@ -1,4 +1,4 @@
-#!/Users/andrerico/DEV/GE/venv/bin/python
+#!/Users/andrerico/DEV/GE/teste/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

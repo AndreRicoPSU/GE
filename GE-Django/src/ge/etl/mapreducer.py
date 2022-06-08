@@ -10,6 +10,8 @@ import concurrent.futures
 from itertools import combinations
 from itertools import islice
 
+# IMPORT: I have problem to run on python > 3.9 with global variant does not in Concurrent.future
+
 
 def vr_config(dir):
     attr = {}
@@ -29,7 +31,11 @@ def chunked_iterable(iterable, size):
 
 
 def mapper(lines):
-    df_mapper = pd.DataFrame(columns=["WORD1", "WORD2", "COUNT"])
+    global v_blacklist
+    WORD_RE = re.compile(r"[\w']+")
+    # https://docs.python.org/3/library/re.html#re.compile / # https://regex101.com/r/CMGOHz/1
+    # WORD_RE = re.compile(r"\b\d*[^\W\d_][^\W_]*\b")
+    df_mapper = pd.DataFrame(columns=["word1", "word2", "count"])
     tmp = []
     for line in lines:
         # Preparation before mapping
@@ -46,20 +52,24 @@ def mapper(lines):
                 tmp.append([x, y, 1])
             else:
                 tmp.append([y, x, 1])
-    df_mapper = pd.DataFrame(tmp, columns=["WORD1", "WORD2", "COUNT"])
+    df_mapper = pd.DataFrame(tmp, columns=["word1", "word2", "count"])
     return df_mapper
 
 
 def ingestor(DF):
     # Read from KEYS table to add attributes in keylinks
-    DFKS = pd.read_sql_query("""SELECT * FROM KEYS""", conn)
-    DFKS.sort_values(by="KEY", inplace=True)
-    DFKS.set_index("KEY")
+    DFKS = pd.read_sql_query("""SELECT * FROM GE_KEYGE""", conn)
+    DFKS.sort_values(by="keyge", inplace=True)
+    DFKS.set_index("keyge")
 
-    DF["GRP1N"] = DF.set_index("KEY1").index.map(DFKS.set_index("KEY")["GROUP"])
-    DF["CAT1N"] = DF.set_index("KEY1").index.map(DFKS.set_index("KEY")["CATEGORY"])
-    DF["GRP2N"] = DF.set_index("KEY2").index.map(DFKS.set_index("KEY")["GROUP"])
-    DF["CAT2N"] = DF.set_index("KEY2").index.map(DFKS.set_index("KEY")["CATEGORY"])
+    DF["GRP1N"] = DF.set_index("KEY1").index.map(
+        DFKS.set_index("KEY")["GROUP"])
+    DF["CAT1N"] = DF.set_index("KEY1").index.map(
+        DFKS.set_index("KEY")["CATEGORY"])
+    DF["GRP2N"] = DF.set_index("KEY2").index.map(
+        DFKS.set_index("KEY")["GROUP"])
+    DF["CAT2N"] = DF.set_index("KEY2").index.map(
+        DFKS.set_index("KEY")["CATEGORY"])
     DF["CKEY"] = DF["KEY1"] + str("-") + DF["KEY2"]
     DF["CGRP"] = DF["GRP1N"] + str("-") + DF["GRP2N"]
     DF["CCAT"] = DF["CAT2N"] + str("-") + DF["CAT2N"]
@@ -144,18 +154,25 @@ def db_delete(table, where):
 
 
 def db_masterdata(conn):
-    DFWK = pd.read_sql_query("""SELECT * FROM KEYWORDS""", conn)
-    DFWK.sort_values(by="WORD", inplace=True)
-    DFWK.set_index("WORD")
-    DFBL = pd.read_sql_query("""SELECT WORD FROM BLACKLIST""", conn)
-    DFBL.sort_values(by="WORD", inplace=True)
-    DFBL.set_index("WORD")
+
+    # DFWK = pd.read_sql_query("""SELECT * FROM GE_KEYWORD""", conn)
+    DFWK = pd.read_sql_query(
+        """SELECT GE_KEYWORD.word, ge_keyge.keyge, ge_keyge.id FROM GE_KEYWORD LEFT JOIN GE_KEYGE ON GE_KEYWORD.keyge_id = GE_KEYGE.id""", conn)
+    DFWK.sort_values(by="word", inplace=True)
+    DFWK.set_index("word")
+
+    DFBL = pd.read_sql_query("""SELECT WORD FROM GE_BLACKLIST""", conn)
+    DFBL.sort_values(by="word", inplace=True)
+    DFBL.set_index("word")
+    global v_blacklist
+    v_blacklist = DFBL["word"].tolist()
     return DFWK, DFBL
 
 
 if __name__ == "__main__":
 
-    v_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config.txt")
+    v_path = os.path.join(os.path.dirname(
+        os.path.dirname(__file__)), "etl/config.txt")
     v_config = vr_config(v_path)
 
     parser = argparse.ArgumentParser()
@@ -196,8 +213,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # debug variables
-    # args.process = "string_test_sml"
-    # args.connector = "string_cluster"
+    args.process = "STRING_CLUSTER"
+    args.connector = "STRING_CLUSTER"
     # ßargs.remap = "string_cluster"
     # args.file_keep = True
     # args.file_wordmap = "/Users/andrerico/hall/IGEM"
@@ -227,13 +244,15 @@ if __name__ == "__main__":
             if args.file_wordmap == None:
                 db_delete("WORDMAP", args.remap.upper())
         else:
-            DFR = db_select_df("WORDMAP", "DATASET='" + args.remap.upper() + "'")
+            DFR = db_select_df("WORDMAP", "DATASET='" +
+                               args.remap.upper() + "'")
             if args.file_wordmap == None:
                 db_delete("WORDMAP", "DATASET='" + args.remap.upper() + "'")
 
         if DFR.empty:
             print("WARNING: No records were found with the parameters informed")
-            print("    Table: WORDMAP, DATASET:", args.remap.upper(), "have 0 rows")
+            print("    Table: WORDMAP, DATASET:",
+                  args.remap.upper(), "have 0 rows")
             print("    Process finished without remapping")
             conn.close()
             sys.exit(2)
@@ -245,8 +264,10 @@ if __name__ == "__main__":
         DFR = DFR[~DFR["WORD1"].isin(v_blacklist)]
         DFR = DFR[~DFR["WORD2"].isin(v_blacklist)]
 
-        DFR["KEY1"] = DFR.set_index("WORD1").index.map(DFWK.set_index("WORD")["KEY"])
-        DFR["KEY2"] = DFR.set_index("WORD2").index.map(DFWK.set_index("WORD")["KEY"])
+        DFR["KEY1"] = DFR.set_index("WORD1").index.map(
+            DFWK.set_index("WORD")["KEY"])
+        DFR["KEY2"] = DFR.set_index("WORD2").index.map(
+            DFWK.set_index("WORD")["KEY"])
 
         print("STATUS: Remapping", len(DFR), "WORDMAP rows")
 
@@ -295,34 +316,28 @@ if __name__ == "__main__":
         conn = db_open(v_config["db_path"])
 
         DFWK, DFBL = db_masterdata(conn)
-        v_blacklist = DFBL["WORD"].tolist()
+
+        # v_blacklist = DFBL["word"].tolist()
 
         if args.process.upper() == "ALL":
-            cursor = db_select_conn("CONNECTORS", "UPD_FILE = 1")
+            cursor = db_select_conn("GE_DATASET", "UPDATE_DS = TRUE")
         else:
             cursor = db_select_conn(
-                "CONNECTORS",
-                "UPD_FILE = 1 and CONNECTOR='" + args.process.upper() + "'",
+                "GE_DATASET",
+                "UPDATE_DS = TRUE and DATASET='" + args.process.upper() + "'",
             )
 
         for row in cursor:
-            print("STATUS: starting MapReducer on connector =", row[0])
-            print("         DATABASE = ", row[1])
-            print("         DATASET  = ", row[2])
+            print("STATUS: starting MapReducer on connector =", row[1])
 
             # config PSA folder (persistent staging area)
-            v_dir = v_path_file + "/" + row[0]
-            v_target_file = v_dir + "/" + row[11]
+            v_dir = v_path_file + "/" + row[1]
+            v_target_file = v_dir + "/" + row[8]
             if not os.path.exists(v_target_file):
                 print("WARNING: file for mapping not available in " + v_target_file)
                 continue
 
-            WORD_RE = re.compile(
-                r"[\w']+"
-            )  # https://docs.python.org/3/library/re.html#re.compile / # https://regex101.com/r/CMGOHz/1
-            # WORD_RE = re.compile(r"\b\d*[^\W\d_][^\W_]*\b")
-
-            df_reducer = pd.DataFrame(columns=["WORD1", "WORD2", "COUNT"])
+            df_reducer = pd.DataFrame(columns=["word1", "word2", "count"])
 
             with open(v_target_file) as fp:
                 v_rows = math.ceil(len(fp.readlines()) / v_cores)
@@ -348,47 +363,73 @@ if __name__ == "__main__":
 
                     for future_to in concurrent.futures.as_completed(future):
                         df_combiner = future_to.result()
-                        df_reducer = pd.concat([df_reducer, df_combiner], axis=0)
+                        df_reducer = pd.concat(
+                            [df_reducer, df_combiner], axis=0)
 
             # -------------------------------#
             # --- REDUCER ------------------ #
             # -------------------------------#
-            DFR = df_reducer.groupby(["WORD1", "WORD2"], as_index=False)["COUNT"].sum()
+            DFR = df_reducer.groupby(["word1", "word2"], as_index=False)[
+                "count"].sum()
 
             # -------------------------------#
             # --- ADD WORDMAP TABLE  ------- #
             # -------------------------------#
-            DFR["KEY1"] = DFR.set_index("WORD1").index.map(
-                DFWK.set_index("WORD")["KEY"]
+
+            DFR["database"] = row[11]
+            DFR["dataset"] = row[1]
+
+            DFR["key1"] = DFR.set_index("word1").index.map(
+                DFWK.set_index("word")["keyge"]
             )
-            DFR["KEY2"] = DFR.set_index("WORD2").index.map(
-                DFWK.set_index("WORD")["KEY"]
+            DFR["key2"] = DFR.set_index("word2").index.map(
+                DFWK.set_index("word")["keyge"]
             )
 
-            DFR["CONNECTOR"] = row[0]
-            DFR["DATABASE"] = row[1]
-            DFR["DATASET"] = row[2]
+            # DFR["keyge1_id"] = DFR.set_index("keyge1").index.map(
+            #     DFWK.set_index("keyge")["id"]
+            # )
+            # DFR["keyge2_id"] = DFR.set_index("keyge2").index.map(
+            #     DFWK.set_index("keyge")["id"]
+            # )
+
 
             if args.file_wordmap != None:
-                DFR.to_csv(str(args.file_wordmap + "/wordmap-" + row[0] + ".csv"))
+                DFR.to_csv(str(args.file_wordmap +
+                           "/wordmap-" + row[1] + ".csv"))
                 print(
                     "STATUS: file with WORDMAP data created in",
-                    args.file_wordmap + "/wordmap-" + row[0] + ".csv",
+                    args.file_wordmap + "/wordmap-" + row[1] + ".csv",
                 )
             else:
+                db_delete("X_WORDMAP", "DATASET='" + str(row[1]) + "'")
+
+                conn_a = sqlite3.connect(
+                    "/users/andrerico/dev/ge/ge-python/database/ge.db")
+
+                # del DFR['keyge1']
+                # del DFR['keyge2']
+                DFR.to_sql("WORDMAP", conn_a, if_exists='append',
+                           chunksize=1000, index=False)
+                conn.commit()
+
+                print("STATUS: data from",
+                      row[1], "writed in WORDMAP table")
                 try:
-                    db_delete("WORDMAP", "DATASET='" + row[2] + "'")
-                    DFR.to_sql("WORDMAP", conn, if_exists="append", index=False)
+                    db_delete("GE_WORDMAP", "DATASET_ID='" + row[0] + "'")
+                    DFR.to_sql("GE_WORDMAP", conn,
+                               if_exists="append", index=False)
                     conn.commit()
-                    print("STATUS: data from", row[0], "writed in WORDMAP table")
+                    print("STATUS: data from",
+                          row[1], "writed in WORDMAP table")
                 except:
                     print(
                         "ERRO: It is not possible to write",
-                        row[0],
+                        row[1],
                         "data in WORDMAP table",
                     )
 
-            DFR.drop(["WORD1", "WORD2"], axis=1, inplace=True)
+            DFR.drop(["word1", "word2"], axis=1, inplace=True)
             DFR.dropna(axis=0, inplace=True)
 
             if not DFR.empty:
@@ -397,9 +438,11 @@ if __name__ == "__main__":
                 print("STATUS: reduced to", len(DFR.index), "KEYLINKS rows")
                 try:
                     db_delete("KEYLINKS", "DATASET='" + row[2] + "'")
-                    DFR.to_sql("KEYLINKS", conn, if_exists="append", index=False)
+                    DFR.to_sql("KEYLINKS", conn,
+                               if_exists="append", index=False)
                     conn.commit()
-                    print("STATUS: data from", row[0], "writed in KEYLINKS table")
+                    print("STATUS: data from",
+                          row[0], "writed in KEYLINKS table")
                 except:
                     print(
                         "ERRO: It is not possible to write",
@@ -407,7 +450,8 @@ if __name__ == "__main__":
                         "data in KEYLINKS table",
                     )
             else:
-                print("WARNING: no data from", row[0], "to update KEYLINKS table")
+                print("WARNING: no data from",
+                      row[0], "to update KEYLINKS table")
 
             if not args.file_keep:
                 os.remove(v_target_file)

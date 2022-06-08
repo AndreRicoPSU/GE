@@ -1,2 +1,2 @@
-db_path /Users/andrerico/hall/igem/ge/database/ge.db
-psa_path /Users/andrerico/hall/igem/ge/psa
+db_path /Users/andrerico/dev/ge/ge-python/database/ge.db
+psa_path /Users/andrerico/dev/ge/ge-python/psa

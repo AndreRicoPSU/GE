@@ -28,8 +28,8 @@ class DatabaseAdmin(admin.ModelAdmin):
 
 class DatasetAdmin(admin.ModelAdmin):
     model = Dataset
-    list_display = ('database', 'dataset', 'update', 'last_update')
-    list_filter = ['database', 'update']
+    list_display = ('database', 'dataset', 'update_ds', 'last_update')
+    list_filter = ['database', 'update_ds']
 
 
 admin.site.register(Question, QuestionAdmin)

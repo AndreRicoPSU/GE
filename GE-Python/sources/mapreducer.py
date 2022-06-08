@@ -56,10 +56,14 @@ def ingestor(DF):
     DFKS.sort_values(by="KEY", inplace=True)
     DFKS.set_index("KEY")
 
-    DF["GRP1N"] = DF.set_index("KEY1").index.map(DFKS.set_index("KEY")["GROUP"])
-    DF["CAT1N"] = DF.set_index("KEY1").index.map(DFKS.set_index("KEY")["CATEGORY"])
-    DF["GRP2N"] = DF.set_index("KEY2").index.map(DFKS.set_index("KEY")["GROUP"])
-    DF["CAT2N"] = DF.set_index("KEY2").index.map(DFKS.set_index("KEY")["CATEGORY"])
+    DF["GRP1N"] = DF.set_index("KEY1").index.map(
+        DFKS.set_index("KEY")["GROUP"])
+    DF["CAT1N"] = DF.set_index("KEY1").index.map(
+        DFKS.set_index("KEY")["CATEGORY"])
+    DF["GRP2N"] = DF.set_index("KEY2").index.map(
+        DFKS.set_index("KEY")["GROUP"])
+    DF["CAT2N"] = DF.set_index("KEY2").index.map(
+        DFKS.set_index("KEY")["CATEGORY"])
     DF["CKEY"] = DF["KEY1"] + str("-") + DF["KEY2"]
     DF["CGRP"] = DF["GRP1N"] + str("-") + DF["GRP2N"]
     DF["CCAT"] = DF["CAT2N"] + str("-") + DF["CAT2N"]
@@ -155,7 +159,8 @@ def db_masterdata(conn):
 
 if __name__ == "__main__":
 
-    v_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config.txt")
+    v_path = os.path.join(os.path.dirname(
+        os.path.dirname(__file__)), "config.txt")
     v_config = vr_config(v_path)
 
     parser = argparse.ArgumentParser()
@@ -196,7 +201,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # debug variables
-    # args.process = "string_test_sml"
+    args.process = "string_test_sml"
     # args.connector = "string_cluster"
     # ßargs.remap = "string_cluster"
     # args.file_keep = True
@@ -227,13 +232,15 @@ if __name__ == "__main__":
             if args.file_wordmap == None:
                 db_delete("WORDMAP", args.remap.upper())
         else:
-            DFR = db_select_df("WORDMAP", "DATASET='" + args.remap.upper() + "'")
+            DFR = db_select_df("WORDMAP", "DATASET='" +
+                               args.remap.upper() + "'")
             if args.file_wordmap == None:
                 db_delete("WORDMAP", "DATASET='" + args.remap.upper() + "'")
 
         if DFR.empty:
             print("WARNING: No records were found with the parameters informed")
-            print("    Table: WORDMAP, DATASET:", args.remap.upper(), "have 0 rows")
+            print("    Table: WORDMAP, DATASET:",
+                  args.remap.upper(), "have 0 rows")
             print("    Process finished without remapping")
             conn.close()
             sys.exit(2)
@@ -245,8 +252,10 @@ if __name__ == "__main__":
         DFR = DFR[~DFR["WORD1"].isin(v_blacklist)]
         DFR = DFR[~DFR["WORD2"].isin(v_blacklist)]
 
-        DFR["KEY1"] = DFR.set_index("WORD1").index.map(DFWK.set_index("WORD")["KEY"])
-        DFR["KEY2"] = DFR.set_index("WORD2").index.map(DFWK.set_index("WORD")["KEY"])
+        DFR["KEY1"] = DFR.set_index("WORD1").index.map(
+            DFWK.set_index("WORD")["KEY"])
+        DFR["KEY2"] = DFR.set_index("WORD2").index.map(
+            DFWK.set_index("WORD")["KEY"])
 
         print("STATUS: Remapping", len(DFR), "WORDMAP rows")
 
@@ -348,12 +357,14 @@ if __name__ == "__main__":
 
                     for future_to in concurrent.futures.as_completed(future):
                         df_combiner = future_to.result()
-                        df_reducer = pd.concat([df_reducer, df_combiner], axis=0)
+                        df_reducer = pd.concat(
+                            [df_reducer, df_combiner], axis=0)
 
             # -------------------------------#
             # --- REDUCER ------------------ #
             # -------------------------------#
-            DFR = df_reducer.groupby(["WORD1", "WORD2"], as_index=False)["COUNT"].sum()
+            DFR = df_reducer.groupby(["WORD1", "WORD2"], as_index=False)[
+                "COUNT"].sum()
 
             # -------------------------------#
             # --- ADD WORDMAP TABLE  ------- #
@@ -370,7 +381,8 @@ if __name__ == "__main__":
             DFR["DATASET"] = row[2]
 
             if args.file_wordmap != None:
-                DFR.to_csv(str(args.file_wordmap + "/wordmap-" + row[0] + ".csv"))
+                DFR.to_csv(str(args.file_wordmap +
+                           "/wordmap-" + row[0] + ".csv"))
                 print(
                     "STATUS: file with WORDMAP data created in",
                     args.file_wordmap + "/wordmap-" + row[0] + ".csv",
@@ -378,9 +390,11 @@ if __name__ == "__main__":
             else:
                 try:
                     db_delete("WORDMAP", "DATASET='" + row[2] + "'")
-                    DFR.to_sql("WORDMAP", conn, if_exists="append", index=False)
+                    DFR.to_sql("WORDMAP", conn,
+                               if_exists="append", index=False)
                     conn.commit()
-                    print("STATUS: data from", row[0], "writed in WORDMAP table")
+                    print("STATUS: data from",
+                          row[0], "writed in WORDMAP table")
                 except:
                     print(
                         "ERRO: It is not possible to write",
@@ -397,9 +411,11 @@ if __name__ == "__main__":
                 print("STATUS: reduced to", len(DFR.index), "KEYLINKS rows")
                 try:
                     db_delete("KEYLINKS", "DATASET='" + row[2] + "'")
-                    DFR.to_sql("KEYLINKS", conn, if_exists="append", index=False)
+                    DFR.to_sql("KEYLINKS", conn,
+                               if_exists="append", index=False)
                     conn.commit()
-                    print("STATUS: data from", row[0], "writed in KEYLINKS table")
+                    print("STATUS: data from",
+                          row[0], "writed in KEYLINKS table")
                 except:
                     print(
                         "ERRO: It is not possible to write",
@@ -407,7 +423,8 @@ if __name__ == "__main__":
                         "data in KEYLINKS table",
                     )
             else:
-                print("WARNING: no data from", row[0], "to update KEYLINKS table")
+                print("WARNING: no data from",
+                      row[0], "to update KEYLINKS table")
 
             if not args.file_keep:
                 os.remove(v_target_file)
