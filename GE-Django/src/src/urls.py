@@ -23,4 +23,5 @@ admin.site.index_title = "Custom IGEM Admin"
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('ge/', include('ge.urls')),
+    path('dashboard/', include('dashboard.urls')),
 ]

@@ -8,6 +8,7 @@ from concurrent.futures import as_completed
 from django_thread import ThreadPoolExecutor
 from itertools import combinations
 from itertools import islice
+import numpy as np
 
 
 def chunked_iterable(iterable, size):
@@ -22,11 +23,19 @@ def mapper(lines):
         df_mapper = pd.DataFrame(columns=["WORD1", "WORD2", "COUNT"])
         tmp = []
         for line in lines:
+
+
+            RE_DIGIT = re.compile(r"\b(?<![0-9-])(\d+)(?![0-9-])\b")
+            digits = RE_DIGIT.findall(line)
+
             words = WORD_RE.findall(line)
             words = [x.lower() for x in words]
             words.sort()
             words = list(set(words))  # Point for contestation
             words.sort()
+
+            words = list(filter(lambda w: w not in digits, words))
+
             words = list(filter(lambda w: w not in v_blacklist, words))
             # Mapping
             for (x, y) in combinations(words, 2):
@@ -44,7 +53,7 @@ def process():
     v_path_file = str(settings.BASE_DIR) + "/ge/psa/"
 
     global WORD_RE, v_blacklist
-    WORD_RE = re.compile(r"[\w']+") # WORD_RE = re.compile(r"\b\d*[^\W\d_][^\W_]*\b")
+    WORD_RE = re.compile(r"[\w'\:\-\#]+") # WORD_RE = re.compile(r"\b\d*[^\W\d_][^\W_]*\b")
 
     v_cores = os.cpu_count()
     print("INFORM: process MapReduce will run in", v_cores, "parallel cores")
@@ -102,20 +111,21 @@ def process():
         DFR["database_id"] = ds.database_id
         DFR["dataset_id"] = ds.id
 
+
         DFR["keyge1_id"] = DFR.set_index("WORD1").index.map(
             DFWK.set_index("word")["keyge_id"]
         )
         DFR["keyge2_id"] = DFR.set_index("WORD2").index.map(
             DFWK.set_index("word")["keyge_id"]
         )
-        DFR['cword'] = str(ds.id) + str('-') + DFR['WORD1'] + str('-') + DFR['WORD2']
-       
+
         WordMap.objects.filter(dataset_id = ds.id).delete()
 
         DFR = DFR.where(pd.notnull(DFR), '')
-       
+        DFR.insert(loc=0, column="A", value=DFR.reset_index().index)
+  
         model_instances = [WordMap(
-            cword = record.cword,
+            cword = str(record.dataset_id) + '-' + str(record.A),
             word1 = record.WORD1,
             word2 = record.WORD2,   
             count = record.COUNT,
@@ -129,12 +139,14 @@ def process():
     
         print("STATUS: data from", ds.dataset, "writed in WORDMAP table")
    
-        DFR.drop(["WORD1", "WORD2"], axis=1, inplace=True)
+        DFR.drop(["WORD1", "WORD2", "A"], axis=1, inplace=True)
         DFR = DFR.replace('', pd.NaT)
         DFR.dropna(axis=0, inplace=True)
 
         DFR.keyge2_id = DFR.keyge2_id.astype(int)
         DFR.keyge1_id = DFR.keyge1_id.astype(int)
+
+        #Precisa agregar os dados novamente
       
         if not DFR.empty:
         

@@ -46,6 +46,7 @@ class Database(models.Model):
 class Dataset(models.Model):
     dataset = models.CharField(max_length=20, unique=True)
     database = models.ForeignKey(Database, on_delete=models.CASCADE)
+    description = models.CharField(max_length=200, default="description...")
     update_ds = models.BooleanField(default=True)
     last_update = models.DateTimeField(
         auto_now=False, auto_now_add=False, blank=True)
@@ -133,6 +134,9 @@ class WordMap(models.Model):
     word2 = models.CharField(max_length=20)
     count = models.IntegerField(default=0)
 
+    def __str__(self):
+        linker = str(self.word1) + " - " + str(self.word2)
+        return linker
     # class Meta:
     #     db_table = 'word_map'
     #     unique_together = ('dataset', 'word1', 'word2')

@@ -42,11 +42,9 @@ class Command(BaseCommand):
             print(DFR)
 
             if options['table'] == "blacklist":
-
                 model_instances = [Blacklist(
                     word = record.word,
                     ) for record in DFR.itertuples()]
-
                 Blacklist.objects.bulk_create(model_instances, ignore_conflicts=True)
             
             if options['table'] == "category":
@@ -65,7 +63,7 @@ class Command(BaseCommand):
 
             if options['table'] == "database":
                 model_instances = [Database(
-                    databse = record.database,
+                    database = record.database,
                     description = record.description,
                     category = record.category,
                     website = record.website,

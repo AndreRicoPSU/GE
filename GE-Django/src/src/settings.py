@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ge.apps.GeConfig',
+    'dashboard.apps.DashboardConfig',
 ]
 
 MIDDLEWARE = [

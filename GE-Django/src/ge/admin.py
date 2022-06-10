@@ -31,6 +31,11 @@ class DatasetAdmin(admin.ModelAdmin):
     list_display = ('database', 'dataset', 'update_ds', 'last_update')
     list_filter = ['database', 'update_ds']
 
+class WordMapAdmin(admin.ModelAdmin):
+    model = WordMap
+    list_display = ('dataset', 'word1', 'word2', 'count')
+    list_filter = ['dataset', 'word1', 'word2']
+
 
 admin.site.register(Question, QuestionAdmin)
 admin.site.register(Database, DatabaseAdmin)
@@ -40,5 +45,5 @@ admin.site.register(Category)
 admin.site.register(Blacklist)
 admin.site.register(Keyge)
 admin.site.register(KeyWord)
-admin.site.register(WordMap)
+admin.site.register(WordMap, WordMapAdmin)
 admin.site.register(KeyLink)
