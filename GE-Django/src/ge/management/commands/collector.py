@@ -42,7 +42,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # config PSA folder (persistent staging area)
         v_path_file = str(settings.BASE_DIR) + "/ge/psa/"
-
+        print(v_path_file)
         # for ds in options['ds_ids']:
             # print(ds) 
 
@@ -57,7 +57,12 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS('START:  "%s"' % ds.database))
                                     
                 v_dir = v_path_file + ds.dataset
-                v_file_url = ds.source_path
+                
+                if ds.source_local_flag == True: # will run local files
+                    v_file_url = ds.source_local
+                else: # go to internet
+                    v_file_url = ds.source_path
+                
                 v_source_file = v_dir + "/" + ds.source_file_name
                 v_target_file = v_dir + "/" + ds.target_file_name
 
@@ -92,12 +97,17 @@ class Command(BaseCommand):
                     if os.path.exists(v_source_file):
                         os.remove(v_source_file)
                     print("VERSION = ", "download in process ")
-                    r = requests.get(v_file_url, stream=True)
-                    with open(v_source_file, "wb") as download:
-                        for chunk in r.iter_content(chunk_size=1000000):
-                                if chunk:
-                                    download.write(chunk)  # Improve Point
                     
+                    if ds.source_local_flag == False: # will run local files
+                        r = requests.get(v_file_url, stream=True)
+                        with open(v_source_file, "wb") as download:
+                            for chunk in r.iter_content(chunk_size=1000000):
+                                    if chunk:
+                                        download.write(chunk)  # Improve Point
+                    else:
+                        v_source_file = v_file_url # local file
+                        v_target_file = v_file_url # local file
+
                     # Update LOG table if new version
                     v_size = str(os.stat(v_source_file).st_size)
                     log = LogsCollector(source_file_name = ds.source_file_name, 
@@ -113,6 +123,7 @@ class Command(BaseCommand):
                     if ds.source_compact:
                         patoolib.extract_archive(str(v_source_file), outdir=str(v_dir))
                         os.remove(v_source_file)
+    
 
                     # release Dataset table:
                     ds.source_file_version = v_version

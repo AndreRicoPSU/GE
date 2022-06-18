@@ -1,0 +1,2 @@
+db_path /Users/andrerico/dev/ge/teste/src/db.sqlite3
+psa_path /Users/andrerico/dev/ge/teste/src/ge/psa
