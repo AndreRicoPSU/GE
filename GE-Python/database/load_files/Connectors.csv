@@ -1,4 +1,0 @@
-﻿CONNECTOR,DATABASE,DATASET,SOURCE_PATH,FILE_FORMAT,FILE_NAME,VERSION,UPD_FILE,SIZE,LAST_UPDATE
-HMPRTO,HMDB,HMPROT,http://specdb.wishartlab.com/downloads/exports/peak_lists_txt/hmdb_predicted_msms_peak_lists.zip,TXT,XXY,,,,
-HMPRFS,HMDB,HMPROT,https://hmdb.ca/system/downloads/current/sequences/protein.fasta.zip,FASTA,XXX,,,,
-CTDCSV,CTD,CTD_GEN,http://ctdbase.org/reports/CTD_chem_gene_ixns.csv.gz,CSV,CCC,,,,
