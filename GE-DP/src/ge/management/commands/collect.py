@@ -8,8 +8,14 @@ from ge.models import Dataset, LogsCollector, DSTColumn
 from django.utils import timezone
 import pandas as pd
 
-"""
-Pendencies: 
+""" 
+First process in the data flow and aims to extract new versions of external databases for the PSA area
+
+Collect only considers Datasets marked as active for extraction and has version control to not extract previously processed data
+
+If you want to reprocess a database again, it will be necessary to delete the previous version in the DataSets register
+
+Pendencies
 1. Add dataset controle to process only one
 2. Another funcions reset / active / deactive / 
 """
@@ -17,7 +23,7 @@ Pendencies:
 
 
 class Command(BaseCommand):
-    help = 'descrever sobre o modulo COLLECTOR'
+    help = 'Collect external databases to PSA'
 
     def add_arguments(self, parser):
         # Positional arguments
@@ -25,47 +31,42 @@ class Command(BaseCommand):
        
         # Named (optional) arguments
         parser.add_argument(
-            '--process',
+            '--process_all',
             action='store_true',
-            help='Will process routine to download db files from internet',
+            help='Will process all active Datasets and with new version',
         )
 
         parser.add_argument(
             '--show',
             action='store_true',
-            help='Will process routine to download db files from internet',
+            help='Will show the Master Data Datasets',
         )
 
-
-
     def handle(self, *args, **options):
-        # config PSA folder (persistent staging area)
+        #config PSA folder (persistent staging area)
         v_path_file = str(settings.BASE_DIR) + "/psa/"
 
-        # for ds in options['ds_ids']:
-            # print(ds) 
 
-        if options['process']:
+        if options['process_all']:
 
-            # Only update registers will process = true
+            #Only update registers will process = true
             ds_queryset = Dataset.objects.filter(update_ds=True)
-            #ds_queryset = ds_queryset.filter(dataset__contains='ds_ids')
-
-
+  
             for ds in ds_queryset:
                 self.stdout.write(self.style.SUCCESS('START:  "%s"' % ds.database))
-                                    
+
+                #variables                    
                 v_dir = v_path_file + ds.dataset
                 v_file_url = ds.source_path
                 v_source_file = v_dir + "/" + ds.source_file_name
                 v_target_file = v_dir + "/" + ds.target_file_name
 
-                # create folder to host file download
+                #create folder to host file download
                 if not os.path.isdir(v_dir):
                     os.makedirs(v_dir)
                     print("FOLDER  = ", v_dir)
 
-                # Get file source version from ETAG
+                #Get file source version from ETAG
                 try:
                     v_version = str(requests.get(v_file_url, stream=True).headers["etag"])
                 except:
@@ -73,28 +74,26 @@ class Command(BaseCommand):
         
                 # Check is new version before download
                 if ds.source_file_version == v_version:
-                    # Same vrsion, No will download
+                    # Same vrsion, only write the log table
                     print("version already loaded")
                     log = LogsCollector(source_file_name = ds.source_file_name, 
-                                        date = timezone.now(), # datetime.datetime.now(),
+                                        date = timezone.now(),
                                         dataset = ds.dataset,
                                         database = ds.database,
                                         version = v_version,
                                         status = False,
                                         size = 0) 
-                    log.save()
-
-                
-                    print(str("'" + ds.source_file_sep + "'"))  
-
-
+                    log.save() 
+                    self.stdout.write(self.style.NOTICE('Version already loaded:  "%s"' % ds.database))          
+   
                 else:
                     # New file version, start download
                     if os.path.exists(v_target_file):
                         os.remove(v_target_file)
                     if os.path.exists(v_source_file):
                         os.remove(v_source_file)
-                    print("VERSION = ", "download in process ")
+
+                    self.stdout.write(self.style.NOTICE('New version of file, starting download of:  "%s"' % ds.database))           
                     r = requests.get(v_file_url, stream=True)
                     with open(v_source_file, "wb") as download:
                         for chunk in r.iter_content(chunk_size=1000000):
@@ -111,39 +110,43 @@ class Command(BaseCommand):
                                         status = True,
                                         size = v_size) 
                     log.save()
+                    self.stdout.write(self.style.NOTICE('Download successful'))
 
+                    
                     # Unzip source file
                     if ds.source_compact:
+                        self.stdout.write(self.style.NOTICE('Starting the file unzipping process'))
                         patoolib.extract_archive(str(v_source_file), outdir=str(v_dir))
                         os.remove(v_source_file)
 
-                    # release Dataset table:
+                    # Update Dataset table:
+                    self.stdout.write(self.style.NOTICE('Updating Dataset Control Data'))
                     ds.source_file_version = v_version
                     ds.source_file_size = v_size
                     ds.target_file_size = str(os.stat(v_target_file).st_size)
-                    ds.last_update = timezone.now()#datetime.datetime.now()
+                    ds.last_update = timezone.now()
                     ds.save()
+                    
 
-
-                    # Transformation field to set with GE.db
-                    # Omics fileds ID are compost only numbers and this process add a string to know this origem on MapRudecer process
+                    # # Transformation field to set with GE.db
+                    # # Omics fileds ID are compost only numbers and this process add a string to know this origem on MapRudecer process
                 
-                    v_skip = ds.source_file_skiprow
-                    v_tab = str(ds.source_file_sep)
-                    DFF = pd.read_csv(v_target_file, sep=v_tab, skiprows=v_skip, engine='python')
+                    # v_skip = ds.source_file_skiprow
+                    # v_tab = str(ds.source_file_sep)
+                    # DFF = pd.read_csv(v_target_file, sep=v_tab, skiprows=v_skip, engine='python')
 
-                    ds_queryset_columun = DSTColumn.objects.filter(dataset_id=ds.id, status=True) 
+                    # ds_queryset_columun = DSTColumn.objects.filter(dataset_id=ds.id, status=True) 
 
-                    if ds_queryset_columun:
-                        for ds_column in ds_queryset_columun:
-                            x = int(ds_column.column_number)
-                            if ds_column.pre_choice:             
-                                DFF.iloc[:,x] = DFF.iloc[:,x].apply(lambda y: "{}{}".format(ds_column.pre_value,y))
+                    # if ds_queryset_columun:
+                    #     for ds_column in ds_queryset_columun:
+                    #         x = int(ds_column.column_number)
+                    #         if ds_column.pre_choice:             
+                    #             DFF.iloc[:,x] = DFF.iloc[:,x].apply(lambda y: "{}{}".format(ds_column.pre_value,y))
                         
-                            if ds_column.pos_choice:  
-                                DFF.iloc[:,x] = DFF.iloc[:,x].apply(lambda y: "{}{}".format(y,ds_column.pos_value))
+                    #         if ds_column.pos_choice:  
+                    #             DFF.iloc[:,x] = DFF.iloc[:,x].apply(lambda y: "{}{}".format(y,ds_column.pos_value))
 
-                        DFF.to_csv(v_target_file)   
+                    #     DFF.to_csv(v_target_file)   
 
 
 

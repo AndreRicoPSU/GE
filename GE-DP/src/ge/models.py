@@ -88,6 +88,8 @@ class Keyge(models.Model):
 class KeyWord(models.Model):
     word = models.CharField(max_length=100, primary_key=True)
     keyge = models.ForeignKey(Keyge, on_delete=models.CASCADE)
+    status = models.BooleanField(default=False, verbose_name='Active?')
+    commute = models.BooleanField(default=False, verbose_name='Commute?')
 
     def __str__(self):
         linker = str(self.keyge) + " - " + str(self.word)
@@ -124,10 +126,12 @@ class KeyLink(models.Model):
 
 class DSTColumn(models.Model):
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE)
+    status = models.BooleanField(default=False, verbose_name='Active?')
     column_number = models.IntegerField(default=0, verbose_name='Column Sequence')
-    status = models.BooleanField(default=False, verbose_name='Status')
-    pre_choice = models.BooleanField(default=False, verbose_name='Active Prefix')
-    pos_choice = models.BooleanField(default=False, verbose_name='Active Postfix')
+    column_name = models.CharField(max_length=40, blank=True, verbose_name='Column Name')
+    replace_terms = models.BooleanField(default=False, verbose_name='Replacement?')   
+    pre_choice = models.BooleanField(default=False, verbose_name='Prefix?')
+    pos_choice = models.BooleanField(default=False, verbose_name='Postfix?')
     pre_value = models.CharField(max_length=5, blank=True, verbose_name='Value Prefix')
     pos_value = models.CharField(max_length=5, blank=True, verbose_name='Value Postfix')
     

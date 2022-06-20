@@ -11,8 +11,8 @@ class DatabaseAdmin(admin.ModelAdmin):
 class ChoiceDSTColumn(admin.TabularInline):
     model = DSTColumn
     fieldsets = [
-        ('Transformation Columns',              {'fields': ['column_number','status','pre_choice','pre_value','pos_choice','pos_value'], 'classes': ['collapse']})]
-    extra = 3
+        ('Transformation Columns',              {'fields': ['column_number','column_name','status','replace_terms','pre_choice','pre_value','pos_choice','pos_value'],'classes': ['collapse']})]
+    extra = 1
 
 
 class DatasetAdmin(admin.ModelAdmin):
@@ -57,7 +57,7 @@ class DSTCAdmin(admin.ModelAdmin):
 
 class KeyWordAdmin(admin.ModelAdmin):
     model = KeyWord
-    list_display = ('keyge_id','get_keyge','word')
+    list_display = ('keyge_id','get_keyge','word','status','commute')
 
     @admin.display(description='Keyge', ordering='keyge__keyge')
     def get_keyge(self, obj):

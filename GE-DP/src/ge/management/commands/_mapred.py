@@ -12,6 +12,17 @@ from itertools import islice
 import numpy as np
 
 
+
+"""
+
+Reconstrucao
+- Ja esta em lowcase
+nao precisa mais eliminar a blacklist
+como ja modificamos as words por keyge, ler apenas a tabela keyge e ver as correlacoes
+"""
+
+
+
 def chunked_iterable(iterable, size):
         while True:
             chunk = list(islice(iterable, size))
@@ -23,8 +34,10 @@ def chunked_iterable(iterable, size):
 def mapper(lines):
         df_mapper = pd.DataFrame(columns=["word1", "word2", "count"])
         tmp = []
+        
         for line in lines:
 
+            print(line)
             RE_DIGIT = re.compile(r"\b(?<![0-9-])(\d+)(?![0-9-])\b")
             
             words = WORD_RE.findall(line)
@@ -40,6 +53,9 @@ def mapper(lines):
                   
 
             words = list(filter(lambda w: w not in v_blacklist, words)) #Delete words from balacklist table
+
+            print(words)
+
             # Mapping
             for (x, y) in combinations(words, 2):
                 # if x != y: -->> works opposite with list(set(words))
@@ -48,10 +64,11 @@ def mapper(lines):
                 else:
                     tmp.append([y, x, 1])
         df_mapper = pd.DataFrame(tmp, columns=["word1", "word2", "count"])
+        print(df_mapper)
         return df_mapper
 
 
-def process():
+def MapRedProcess():
     # config PSA folder (persistent staging area)
     v_path_file = str(settings.BASE_DIR) + "/psa/"
 
@@ -131,6 +148,7 @@ def process():
         
         DFR.insert(loc=0, column="index", value=DFR.reset_index().index)
   
+        print(DFR)
              
         model_instances = [WordMap(
             cword = str(record.dataset_id) + '-' + str(record.index),
