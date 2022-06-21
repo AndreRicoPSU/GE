@@ -3,7 +3,7 @@ from tokenize import group
 from unicodedata import category
 from django.utils import timezone
 from django.core.management.base import BaseCommand
-from ge.models import Blacklist, Category, Group, Keyge, Dataset, KeyLink, KeyWord, WordMap, Database
+from ge.models import Category, Group, Keyge, Dataset, KeyWord, Database
 from django.conf import settings
 import pandas as pd
 import sys
@@ -19,11 +19,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # Named (optional) arguments
-        parser.add_argument(
-            '--blacklist',
-            action='store_true',
-            help='Load Master Data file to Database',
-        )
+
         parser.add_argument(
             '--category',
             action='store_true',
@@ -57,19 +53,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        if options['blacklist']:       
-            v_path_file = str(settings.BASE_DIR) + "/loader/blacklist.csv"
-            try:
-                DFR = pd.read_csv(v_path_file)
-            except IOError as e:
-                self.stdout.write(self.style.ERROR('ERRO:')) 
-                print(e)
-                sys.exit(2)
-            model_instances = [Blacklist(
-                word = record.word,
-                ) for record in DFR.itertuples()]
-            Blacklist.objects.bulk_create(model_instances, ignore_conflicts=True)        
-            self.stdout.write(self.style.SUCCESS('Load with success to Blacklist'))
 
         if options['category']:       
             v_path_file = str(settings.BASE_DIR) + "/loader/category.csv"

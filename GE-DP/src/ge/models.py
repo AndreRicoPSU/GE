@@ -1,4 +1,3 @@
-from datetime import datetime, date
 from pyexpat import model
 from django.utils import timezone
 from django.db import models
@@ -33,10 +32,10 @@ class Dataset(models.Model):
     def __str__(self):
         return self.dataset
 
-
 class WFControl(models.Model):
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE)
-    last_update = models.DateTimeField(default=timezone.now(), verbose_name="Last Update Dataset")
+    # last_update = models.DateTimeField(default=timezone.now(), verbose_name="Last Update Dataset")
+    last_update = models.DateTimeField(verbose_name="Last Update Dataset")
     source_file_version = models.CharField(max_length=200)
     source_file_size = models.IntegerField(default=0)
     target_file_size = models.IntegerField(default=0)
@@ -77,16 +76,16 @@ class Category(models.Model):
         verbose_name_plural = "Categories"
 
 
-class Blacklist(models.Model):
-    word = models.CharField(max_length=40, primary_key=True)
+# class Blacklist(models.Model):
+#     word = models.CharField(max_length=40, primary_key=True)
 
-    def __str__(self):
-        return self.word
+#     def __str__(self):
+#         return self.word
 
 
 class Keyge(models.Model):
     keyge = models.CharField(max_length=40, unique=True)
-    description = models.CharField(max_length=200)
+    description = models.CharField(max_length=400)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
 
