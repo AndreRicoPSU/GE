@@ -1,68 +1,79 @@
 import os
-import requests
-import patoolib
-import datetime
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from ge.models import Dataset, LogsCollector, DSTColumn, KeyWord
-from django.utils import timezone
-import pandas as pd
+from ge.models import Dataset, KeyWord, WFControl
 from django.core.exceptions import ObjectDoesNotExist
 
+
 """ 
-Processo apos a preparacao dos dados e antes do mapreduce em que ira trocar os termos mapeados para o mesmo padrao
+The Data Commute process aims to search for words corresponding to the keys and eliminate words marked as blacklist
 
 Subprocess:
 
-
 Pendencies:
- - Melhorar o processo sem mais o wordmap
- - adicionar a blacklist
-
-Improves:
-
-
-
-
+ - implement method with fragmented files to improve memory consumption
 """
+
 class Command(BaseCommand):
     help = 'Preparation source data do MapReduce'
 
     def add_arguments(self, parser):
-        # Positional arguments
-        #parser.add_argument('ds_ids', nargs='+', type=str)
        
         # Named (optional) arguments
         parser.add_argument(
-            '--process_all',
-            action='store_true',
-            help='Will process all active Datasets and with new version',
+            '--run',
+            type=str,
+            metavar='dataset',
+            action='store',
+            default=None,
+            help='Will process active Datasets and with new version',
         )
+
+        parser.add_argument(
+            '--reset',
+            type=str,
+            metavar='dataset',
+            action='store',
+            default=None,
+            help='Will reset dataset version control',
+        )   
 
     def handle(self, *args, **options):
         #config PSA folder (persistent staging area)
         v_path_file = str(settings.BASE_DIR) + "/psa/"
 
-
-        if options['process_all']: 
+        if options['run']: 
 
             #Only update registers will process = true
-            ds_queryset = Dataset.objects.filter(update_ds=True)
-  
+            if  options['run'] == 'all':           
+                qs_queryset = Dataset.objects.filter(update_ds=True)
+            else:
+                try:
+                    qs_queryset = Dataset.objects.filter(dataset = options['run'], update_ds=True)
+                except ObjectDoesNotExist:
+                    self.stdout.write(self.style.NOTICE('   Dataset not found'))
+                if not qs_queryset:
+                    self.stdout.write(self.style.NOTICE('   Dataset not found')) 
+
             ds_words = KeyWord.objects.filter(status=True, commute=True)
 
-
-            for ds in ds_queryset:
+            for qs in qs_queryset:
   
-                self.stdout.write(self.style.SQL_FIELD('START:  "%s"' % ds.dataset))
+                self.stdout.write(self.style.WARNING('Starting the dataset: %s' % qs.dataset))
+
+                try:
+                    qs_wfc = WFControl.objects.get(dataset_id = qs.id, chk_collect=True, chk_prepare=True, chk_commute=False)
+                except ObjectDoesNotExist:
+                    self.stdout.write(self.style.NOTICE('   Dataset without workflow to process'))
+                    continue
 
                 #variables                    
-                v_dir = v_path_file + ds.dataset
-                v_target = v_dir  + "/" + ds.dataset + ".csv"
+                v_dir = v_path_file + qs.dataset
+                v_target = v_dir  + "/" + qs.dataset + ".csv"
 
                 if not os.path.exists(v_target):
-                    self.stdout.write(self.style.NOTICE('  File not available to:  "%s"' % ds.dataset))
-                    self.stdout.write(self.style.ERROR('  path:  "%s"' % v_target))
+                    self.stdout.write(self.style.NOTICE('   File not available to:  "%s"' % qs.dataset))
+                    self.stdout.write(self.style.NOTICE('   path:  "%s"' % v_target))
                     continue
                         
                 f = open(v_target,'r')
@@ -79,5 +90,27 @@ class Command(BaseCommand):
                 f.write(filedata)
                 f.close()
 
-                             
+                # Update WorkFlow Control Process
+                qs_wfc.chk_commute = True
+                qs_wfc.save()
+
+                self.stdout.write(self.style.SUCCESS('   Data Commute success to: %s' % qs.dataset))
+
+
+        if options['reset']:
+            if  options['reset'] == 'all':
+                qs_wfc = WFControl.objects.all()
+                qs_wfc.update(  chk_commute = False,
+                                chk_mapreduce = False)                  
+                self.stdout.write(self.style.SUCCESS('All datasets version control has been reset'))
+            else:
+                try:
+                    qs_wfc = WFControl.objects.get(dataset_id__dataset = options['reset'])
+                    qs_wfc.chk_commute = False
+                    qs_wfc.chk_mapreduce = False
+                    qs_wfc.save()                  
+                    self.stdout.write(self.style.SUCCESS('dataset version control has been reset'))
+                except ObjectDoesNotExist:
+                    self.stdout.write(self.style.ERROR('Could not find dataset'))
+          
                

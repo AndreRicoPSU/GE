@@ -1,4 +1,5 @@
 from datetime import datetime, date
+from pyexpat import model
 from django.utils import timezone
 from django.db import models
 
@@ -18,23 +19,31 @@ class Dataset(models.Model):
     dataset = models.CharField(max_length=20, unique=True)
     database = models.ForeignKey(Database, on_delete=models.CASCADE)
     description = models.CharField(max_length=200, default="")
-    update_ds = models.BooleanField(default=True, verbose_name="Update Dataset")
-    last_update = models.DateTimeField(default=timezone.now(), verbose_name="Last Update Dataset")
+    update_ds = models.BooleanField(default=True, verbose_name="Status")
     source_path = models.CharField(max_length=300, default="") # can be web or file path
     source_web = models.BooleanField(default=True, verbose_name='Source path from Internet')
     source_compact = models.BooleanField(default=False)
     source_file_name = models.CharField(max_length=200)
     source_file_format = models.CharField(max_length=200)
     source_file_sep = models.CharField(max_length=3, default = ",")
-    source_file_skiprow = models.IntegerField(default=0)
-    source_file_version = models.CharField(max_length=200)
-    source_file_size = models.IntegerField(default=0)
+    source_file_skiprow = models.IntegerField(default=0) 
     target_file_name = models.CharField(max_length=200)
     target_file_format = models.CharField(max_length=200)
-    target_file_size = models.IntegerField(default=0)
 
     def __str__(self):
         return self.dataset
+
+
+class WFControl(models.Model):
+    dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE)
+    last_update = models.DateTimeField(default=timezone.now(), verbose_name="Last Update Dataset")
+    source_file_version = models.CharField(max_length=200)
+    source_file_size = models.IntegerField(default=0)
+    target_file_size = models.IntegerField(default=0)
+    chk_collect = models.BooleanField(default=False, verbose_name='Collect Processed')
+    chk_prepare = models.BooleanField(default=False, verbose_name='Prepare Processed')
+    chk_commute = models.BooleanField(default=False, verbose_name='Commute Processed')
+    chk_mapreduce = models.BooleanField(default=False, verbose_name='MapReduce Processed')
 
 
 class LogsCollector(models.Model):
@@ -129,9 +138,8 @@ class DSTColumn(models.Model):
     status = models.BooleanField(default=False, verbose_name='Active?')
     column_number = models.IntegerField(default=0, verbose_name='Column Sequence')
     column_name = models.CharField(max_length=40, blank=True, verbose_name='Column Name')
-    replace_terms = models.BooleanField(default=False, verbose_name='Replacement?')   
     pre_choice = models.BooleanField(default=False, verbose_name='Prefix?')
     pos_choice = models.BooleanField(default=False, verbose_name='Postfix?')
     pre_value = models.CharField(max_length=5, blank=True, verbose_name='Value Prefix')
     pos_value = models.CharField(max_length=5, blank=True, verbose_name='Value Postfix')
-    
+

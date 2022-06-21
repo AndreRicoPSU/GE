@@ -1,13 +1,11 @@
 import os
-import requests
-import patoolib
-import datetime
+import pandas as pd
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from ge.models import Dataset, LogsCollector, DSTColumn
-from django.utils import timezone
-import pandas as pd
+from ge.models import Dataset, DSTColumn, WFControl
 from django.core.exceptions import ObjectDoesNotExist
+
+
 """ 
 Second process in the data flow and aims to preparing the source data in an improved format before the MapReduce process
 
@@ -18,105 +16,132 @@ Subprocess:
     4. Replacement of terms
 
 Pendencies:
-
-Improves:
  - This first moment read all file, but improve to read in chunck to save memory 
- - Create a Workflow table to control each step of process (1. Collect; 2. Prepara; 3. MapReduce)
  - DSTColumn with better interface and control
  - Read n-files
- - Filter to run only one dataset
- - Argument to clean workflow per dataset
-
 """
+
 class Command(BaseCommand):
     help = 'Preparation source data do MapReduce'
 
     def add_arguments(self, parser):
-        # Positional arguments
-        #parser.add_argument('ds_ids', nargs='+', type=str)
        
         # Named (optional) arguments
         parser.add_argument(
-            '--process_all',
-            action='store_true',
-            help='Will process all active Datasets and with new version',
+            '--run',
+            type=str,
+            metavar='dataset',
+            action='store',
+            default=None,
+            help='Will process active Datasets and with new version',
+        )
+
+        parser.add_argument(
+            '--reset',
+            type=str,
+            metavar='dataset',
+            action='store',
+            default=None,
+            help='Will reset dataset version control',
         )
 
     def handle(self, *args, **options):
         #config PSA folder (persistent staging area)
         v_path_file = str(settings.BASE_DIR) + "/psa/"
 
-
-        if options['process_all']:
-
+        if options['run']:
             #Only update registers will process = true
-            ds_queryset = Dataset.objects.filter(update_ds=True)
-  
-            for ds in ds_queryset:
-  
-                self.stdout.write(self.style.SQL_FIELD('START:  "%s"' % ds.dataset))
+            if  options['run'] == 'all':           
+                qs_queryset = Dataset.objects.filter(update_ds=True)
+            else:
+                try:
+                    qs_queryset = Dataset.objects.filter(dataset = options['run'], update_ds=True)
+                except ObjectDoesNotExist:
+                    self.stdout.write(self.style.NOTICE('   Dataset not found'))
+                if not qs_queryset:
+                    self.stdout.write(self.style.NOTICE('   Dataset not found')) 
 
-                #variables                    
-                v_dir = v_path_file + ds.dataset
-                v_target_file = v_dir + "/" + ds.target_file_name
-                v_target = v_dir  + "/" + ds.dataset + ".csv"
-                v_skip = ds.source_file_skiprow
-                v_tab = str(ds.source_file_sep)
+            for qs in qs_queryset:
+                self.stdout.write(self.style.WARNING('Starting the dataset: %s' % qs.dataset))
+
+                try:
+                    qs_wfc = WFControl.objects.get(dataset_id = qs.id, chk_collect=True, chk_prepare=False)
+                except ObjectDoesNotExist:
+                    self.stdout.write(self.style.NOTICE('   Dataset without workflow to process'))
+                    continue
+
+                # Variables                    
+                v_dir = v_path_file + qs.dataset
+                v_target_file = v_dir + "/" + qs.target_file_name
+                v_target = v_dir  + "/" + qs.dataset + ".csv"
+                v_skip = qs.source_file_skiprow
+                v_tab = str(qs.source_file_sep)
 
                 if not os.path.exists(v_target_file):
-                    self.stdout.write(self.style.NOTICE('  File not available to:  "%s"' % ds.dataset))
-                    self.stdout.write(self.style.ERROR('  path:  "%s"' % v_target_file))
+                    self.stdout.write(self.style.NOTICE('   File not available to:  "%s"' % qs.dataset))
+                    self.stdout.write(self.style.NOTICE('   path:  "%s"' % v_target_file))
                     continue
-        
-                             
-                #Read file from PSA
+               
+                # Read file from PSA
 
                 # 1. Elimination of header lines                
                 df_source = pd.read_csv(v_target_file, sep=v_tab, skiprows=v_skip, engine='python')
                 df_target = pd.DataFrame()
-                print(df_source)
-
+               
                 v_col = len(df_source.columns)
        
                 for n in range(v_col):
 
-                    #Read transformations columns
+                    # Read transformations columns
                     try:
-                        qs_col = DSTColumn.objects.get(dataset_id=ds.id, column_number=n)
+                        qs_col = DSTColumn.objects.get(dataset_id=qs.id, column_number=n)
                     except ObjectDoesNotExist:
                         qs_col = None
 
                     if not qs_col:
-                        print('no rules defined')
-                        print('check DSTColumn Table')
-                        print('Column will consider on process')
+                        self.stdout.write(self.style.WARNING('   No rules defines to column %s, check DSTColumn table. This column will consider on process' % n))
                         df_target[n] = df_source.iloc[:,n]
-                        # df_target[n].lower()
-                    else:    
-                        
-                        if not qs_col.status:
-                            print('Column is not active')
-                        else:
+                    else:       
+                        # 2. Deleting unnecessary columns 
+                        if qs_col.status:  
                             # 3. Transforming ID columns with identifiers    
                             if qs_col.pre_choice:             
                                 df_target[qs_col.column_name] = df_source.iloc[:,n].apply(lambda y: "{}{}".format(qs_col.pre_value,y))
-                                # df_target[qs_col.column_name].lower()
                                 continue
                             if qs_col.pos_choice:  
                                 df_target[qs_col.column_name] = df_source.iloc[:,n].apply(lambda y: "{}{}".format(y,qs_col.pos_value))
-                                # df_target[qs_col.column_name].lower()
                                 continue      
-                            if qs_col.replace_terms:
-                                print("replacement terms is not implemeted yet")
-
-                                continue 
+                               
                             df_target[qs_col.column_name] = df_source.iloc[:,n]
-                            # df_target[qs_col.column_name].lower()
                             continue 
-                    
-                df_target = df_target.apply(lambda x: x.astype(str).str.lower()) # pode ser um ponto de lentidao no processo
-                # pd.concat([df_target[col].astype(str).str.upper() for col in df_target.columns], axis=1)
 
+                # Keep all words lower case to match on db values on Commute and MapReduce process    
+                df_target = df_target.apply(lambda x: x.astype(str).str.lower()) 
 
-                print(df_target)
+                # Update WorkFlow Control Process
+                qs_wfc.chk_prepare = True
+                qs_wfc.save()
+
+                # Write the file
                 df_target.to_csv(v_target)
+
+                self.stdout.write(self.style.SUCCESS('   Data preparation success to: %s' % qs.dataset))
+
+
+        if options['reset']:
+            if  options['reset'] == 'all':
+                qs_wfc = WFControl.objects.all()
+                qs_wfc.update(  chk_prepare = False,
+                                chk_commute = False,
+                                chk_mapreduce = False)                  
+                self.stdout.write(self.style.SUCCESS('All datasets versio control has been reset'))
+            else:
+                try:
+                    qs_wfc = WFControl.objects.get(dataset_id__dataset = options['reset'])
+                    qs_wfc.chk_prepare = False
+                    qs_wfc.chk_commute = False
+                    qs_wfc.chk_mapreduce = False
+                    qs_wfc.save()                  
+                    self.stdout.write(self.style.SUCCESS('dataset version control has been reset'))
+                except ObjectDoesNotExist:
+                    self.stdout.write(self.style.ERROR('Could not find dataset'))
