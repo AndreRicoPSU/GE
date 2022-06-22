@@ -19,6 +19,7 @@ MapReduce Process
 Pendencies:
 
 Improves:
+ - WordMap will be opcional
 
 """
 
@@ -36,7 +37,6 @@ def mapper(lines):
         
         for line in lines:
 
-            print(line)
             RE_DIGIT = re.compile(r"\b(?<![0-9-])(\d+)(?![0-9-])\b")
             
             words = WORD_RE.findall(line)
@@ -49,8 +49,6 @@ def mapper(lines):
 
             words = list(filter(lambda w: w not in digits, words)) #Delete words with only numbers
 
-            print(words)
-
             # Mapping
             for (x, y) in combinations(words, 2):
                 # if x != y: -->> works opposite with list(set(words))
@@ -59,12 +57,17 @@ def mapper(lines):
                 else:
                     tmp.append([y, x, 1])
         df_mapper = pd.DataFrame(tmp, columns=["word1", "word2", "count"])
-        print(df_mapper)
+
         return df_mapper
 
 
 def MapRedProcess(v_ds):
 
+    # CONFIGS
+    # Create a file to handles this setup
+    # # 0 = Read all words, delete word replace blacklist and create WordMap Output       
+    # # 1 = Read only words with prefix and don`t create WordMap Output
+    v_schema = 1        
 
     #Only update registers will process = true
     if  v_ds == 'all':           
@@ -148,36 +151,35 @@ def MapRedProcess(v_ds):
             DFR["keyge1_id"] = DFR.set_index("word1").index.map(DFWK.set_index("keyge")["id"])
             DFR["keyge2_id"] = DFR.set_index("word2").index.map(DFWK.set_index("keyge")["id"])
 
-        WordMap.objects.filter(dataset_id = ds.id).delete()
+        if v_schema == 0:
+            WordMap.objects.filter(dataset_id = qs.id).delete()
 
         DFR = DFR.where(pd.notnull(DFR), '')
         
         DFR.insert(loc=0, column="index", value=DFR.reset_index().index)
-  
-        print(DFR)
-             
-        model_instances = [WordMap(
-            cword = str(record.dataset_id) + '-' + str(record.index),
-            word1 = record.word1,
-            word2 = record.word2,   
-            count = record.count,
-            dataset_id = record.dataset_id,
-            database_id = record.database_id,
-            keyge1_id = record.keyge1_id,
-            keyge2_id = record.keyge2_id,
-            ) for record in DFR.itertuples()]
+           
+        if v_schema == 0:   
+            model_instances = [WordMap(
+                cword = str(record.dataset_id) + '-' + str(record.index),
+                word1 = record.word1,
+                word2 = record.word2,   
+                count = record.count,
+                dataset_id = record.dataset_id,
+                database_id = record.database_id,
+                keyge1_id = record.keyge1_id,
+                keyge2_id = record.keyge2_id,
+                ) for record in DFR.itertuples()]
 
-        WordMap.objects.bulk_create(model_instances)
-    
-        print("   Data from", qs.dataset, "writed in Wordmap table")
+            WordMap.objects.bulk_create(model_instances)
+        
+            print("   Data from", qs.dataset, "writed in Wordmap table")
    
-        # START KEYLINK
 
+        # START KEYLINK
         if DFWK.empty:
             print("   No data on Keyge")
             sys.exit(2)
         
-
         DFR.drop(["word1", "word2", "index"], axis=1, inplace=True)
         DFR = DFR.replace('', pd.NaT)
         DFR.dropna(axis=0, inplace=True)
@@ -206,7 +208,6 @@ def MapRedProcess(v_ds):
         else:
             print("   No data from",
                     qs.dataset, "to update Keylink table")
-
 
         print("   Finished", qs.dataset, "process")
 

@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from ._process import process
+# from ._process import process
 from ._mapred import MapRedProcess
 from ge.models import WFControl
 from django.core.exceptions import ObjectDoesNotExist

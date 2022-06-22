@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import DSTColumn, Database, Dataset, Group, Category, Blacklist, Keyge, KeyWord, WordMap, KeyLink, WFControl
+from .models import DSTColumn, Database, Dataset, Group, Category, Keyge, KeyWord, KeyLink, WFControl
 
 class DatabaseAdmin(admin.ModelAdmin):
     model = Database
@@ -11,7 +11,7 @@ class DatabaseAdmin(admin.ModelAdmin):
 class ChoiceDSTColumn(admin.TabularInline):
     model = DSTColumn
     fieldsets = [
-        ('Transformation Columns',              {'fields': ['column_number','column_name','status','pre_choice','pre_value','pos_choice','pos_value'],'classes': ['collapse']})]
+        ('Transformation Columns',              {'fields': ['column_number','column_name','status','pre_choice','pre_value'],'classes': ['collapse']})]
     extra = 1
 
 
@@ -27,14 +27,6 @@ class DatasetAdmin(admin.ModelAdmin):
     # model = Dataset
     list_display = ('database', 'dataset', 'update_ds', 'description')
     list_filter = ['update_ds','database']
-
-
-
-
-class WordMapAdmin(admin.ModelAdmin):
-    model = WordMap
-    list_display = ('dataset', 'word1', 'word2', 'count')
-    list_filter = ['dataset']
 
 class KeygeAdmin(admin.ModelAdmin):
     model = Keyge
@@ -65,6 +57,11 @@ class KeyWordAdmin(admin.ModelAdmin):
         return obj.keyge.keyge
 
 
+# class WordMapAdmin(admin.ModelAdmin):
+#     model = WordMap
+#     list_display = ('dataset', 'word1', 'word2', 'count')
+#     list_filter = ['dataset']
+
 # admin.site.register(Question, QuestionAdmin)
 admin.site.register(Database, DatabaseAdmin)
 admin.site.register(Dataset, DatasetAdmin)
@@ -73,6 +70,6 @@ admin.site.register(Category)
 admin.site.register(WFControl)
 admin.site.register(Keyge, KeygeAdmin)
 admin.site.register(KeyWord, KeyWordAdmin)
-admin.site.register(WordMap, WordMapAdmin)
+# admin.site.register(WordMap, WordMapAdmin)
 admin.site.register(KeyLink, KeyLinkAdmin)
 admin.site.register(DSTColumn, DSTCAdmin)

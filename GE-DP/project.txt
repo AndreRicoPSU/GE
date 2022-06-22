@@ -1,0 +1,9 @@
+
+Jun 22 - Modificacoes
+ >> desativamos o WordMaps
+ >> eliminado o Posfix filds
+ >> criada a tabela de hieraquia de keys
+ >> Todas as Keys deverao ter prefixo
+ >> eliminar todas as palavras que nao tenham prefixo
+
+ .. Ter um campo de apoio para configurar isso

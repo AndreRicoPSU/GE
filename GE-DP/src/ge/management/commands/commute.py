@@ -1,7 +1,8 @@
 import os
+
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from ge.models import Dataset, KeyWord, WFControl
+from ge.models import Dataset, KeyWord, WFControl, DSTColumn
 from django.core.exceptions import ObjectDoesNotExist
 
 
@@ -12,6 +13,9 @@ Subprocess:
 
 Pendencies:
  - implement method with fragmented files to improve memory consumption
+
+ - Eliminar words sem prefixos
+
 """
 
 class Command(BaseCommand):
@@ -39,10 +43,20 @@ class Command(BaseCommand):
         )   
 
     def handle(self, *args, **options):
+        
+        # CONFIGS
+        # Create a file to handles this setup
+        # # 0 = Read all words, delete word replace blacklist and create WordMap Output       
+        # # 1 = Read only words with prefix and don`t create WordMap Output
+        v_schema = 1
+        
         #config PSA folder (persistent staging area)
         v_path_file = str(settings.BASE_DIR) + "/psa/"
 
         if options['run']: 
+
+            # qs to support v_schema 1
+            qs_col = DSTColumn.objects.values_list('pre_value', flat=True).distinct()
 
             #Only update registers will process = true
             if  options['run'] == 'all':           
@@ -83,8 +97,13 @@ class Command(BaseCommand):
                 for dsw in ds_words:
                     filedata = filedata.replace(str(dsw.word),str(dsw.keyge))
 
-                #delete blacklist
-                filedata = filedata.replace('blacklist','')            
+                if v_schema == 0:
+                    #delete blacklist
+                    filedata = filedata.replace('blacklist','')            
+
+                if v_schema == 1:
+                    """ add a code to delete all words is not a prefix key """
+
 
                 f = open(v_target,'w')
                 f.write(filedata)
@@ -93,6 +112,8 @@ class Command(BaseCommand):
                 # Update WorkFlow Control Process
                 qs_wfc.chk_commute = True
                 qs_wfc.save()
+
+
 
                 self.stdout.write(self.style.SUCCESS('   Data Commute success to: %s' % qs.dataset))
 

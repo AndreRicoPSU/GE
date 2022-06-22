@@ -19,6 +19,7 @@ Pendencies:
  - This first moment read all file, but improve to read in chunck to save memory 
  - DSTColumn with better interface and control
  - Read n-files
+
 """
 
 class Command(BaseCommand):

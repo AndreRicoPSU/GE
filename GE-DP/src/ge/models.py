@@ -1,8 +1,6 @@
 from pyexpat import model
-from django.utils import timezone
 from django.db import models
 
-# Connectors Parameters to Extract Data
 
 class Database(models.Model):
     database = models.CharField(max_length=20, unique=True)
@@ -18,8 +16,8 @@ class Dataset(models.Model):
     dataset = models.CharField(max_length=20, unique=True)
     database = models.ForeignKey(Database, on_delete=models.CASCADE)
     description = models.CharField(max_length=200, default="")
-    update_ds = models.BooleanField(default=True, verbose_name="Status")
-    source_path = models.CharField(max_length=300, default="") # can be web or file path
+    update_ds = models.BooleanField(default=True, verbose_name="Activate")
+    source_path = models.CharField(max_length=300, default="") 
     source_web = models.BooleanField(default=True, verbose_name='Source path from Internet')
     source_compact = models.BooleanField(default=False)
     source_file_name = models.CharField(max_length=200)
@@ -34,7 +32,6 @@ class Dataset(models.Model):
 
 class WFControl(models.Model):
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE)
-    # last_update = models.DateTimeField(default=timezone.now(), verbose_name="Last Update Dataset")
     last_update = models.DateTimeField(verbose_name="Last Update Dataset")
     source_file_version = models.CharField(max_length=200)
     source_file_size = models.IntegerField(default=0)
@@ -53,8 +50,6 @@ class LogsCollector(models.Model):
     version = models.CharField(max_length=200)
     status = models.BooleanField(default=True)
     size = models.IntegerField(default=0)
-
-## Key and Words
 
 
 class Group(models.Model):
@@ -76,13 +71,6 @@ class Category(models.Model):
         verbose_name_plural = "Categories"
 
 
-# class Blacklist(models.Model):
-#     word = models.CharField(max_length=40, primary_key=True)
-
-#     def __str__(self):
-#         return self.word
-
-
 class Keyge(models.Model):
     keyge = models.CharField(max_length=40, unique=True)
     description = models.CharField(max_length=400)
@@ -102,7 +90,6 @@ class KeyWord(models.Model):
     def __str__(self):
         linker = str(self.keyge) + " - " + str(self.word)
         return linker
-
 
 
 class WordMap(models.Model):
@@ -138,7 +125,8 @@ class DSTColumn(models.Model):
     column_number = models.IntegerField(default=0, verbose_name='Column Sequence')
     column_name = models.CharField(max_length=40, blank=True, verbose_name='Column Name')
     pre_choice = models.BooleanField(default=False, verbose_name='Prefix?')
-    pos_choice = models.BooleanField(default=False, verbose_name='Postfix?')
     pre_value = models.CharField(max_length=5, blank=True, verbose_name='Value Prefix')
-    pos_value = models.CharField(max_length=5, blank=True, verbose_name='Value Postfix')
 
+class KeyHierarchy(models.Model):
+    keyge = models.ForeignKey(Keyge, related_name='key_child', on_delete=models.CASCADE, verbose_name='Keyge ID')
+    keyge_parent = models.ForeignKey(Keyge, related_name='key_parent', on_delete=models.CASCADE, verbose_name='Keyge Parent ID')
