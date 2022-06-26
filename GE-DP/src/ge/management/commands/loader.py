@@ -119,7 +119,6 @@ class Command(BaseCommand):
                 database_id = record.db_id,
                 description = record.description,
                 update_ds = record.update_ds,
-                last_update = timezone.now(),
                 source_path = record.source_path,
                 source_web = record.source_web,
                 source_compact = record.source_compact,
@@ -127,11 +126,8 @@ class Command(BaseCommand):
                 source_file_format = record.source_file_format,
                 source_file_sep = record.source_file_sep,
                 source_file_skiprow = record.source_file_skiprow,
-                source_file_version = 0,
-                source_file_size = 0,
                 target_file_name = record.target_file_name,
                 target_file_format = record.target_file_format,
-                target_file_size = 0,
             ) for record in DFR.itertuples()]
             Dataset.objects.bulk_create(model_instances, ignore_conflicts=True)        
             self.stdout.write(self.style.SUCCESS('Load with success to Dataset'))

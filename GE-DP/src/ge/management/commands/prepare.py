@@ -106,12 +106,9 @@ class Command(BaseCommand):
                         # 2. Deleting unnecessary columns 
                         if qs_col.status:  
                             # 3. Transforming ID columns with identifiers    
-                            if qs_col.pre_choice:             
+                            if qs_col.pre_value != 'none':             
                                 df_target[qs_col.column_name] = df_source.iloc[:,n].apply(lambda y: "{}{}".format(qs_col.pre_value,y))
-                                continue
-                            if qs_col.pos_choice:  
-                                df_target[qs_col.column_name] = df_source.iloc[:,n].apply(lambda y: "{}{}".format(y,qs_col.pos_value))
-                                continue      
+                                continue    
                                
                             df_target[qs_col.column_name] = df_source.iloc[:,n]
                             continue 

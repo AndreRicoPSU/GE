@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import DSTColumn, Database, Dataset, Group, Category, Keyge, KeyWord, KeyLink, WFControl
+from .models import DSTColumn, Database, Dataset, Group, Category, Keyge, KeyWord, KeyLink, WFControl, PrefixOpc, WordMap
 
 class DatabaseAdmin(admin.ModelAdmin):
     model = Database
@@ -8,11 +8,13 @@ class DatabaseAdmin(admin.ModelAdmin):
     list_filter = ['category']
 
 
+
+
 class ChoiceDSTColumn(admin.TabularInline):
     model = DSTColumn
     fieldsets = [
-        ('Transformation Columns',              {'fields': ['column_number','column_name','status','pre_choice','pre_value'],'classes': ['collapse']})]
-    extra = 1
+        ('Transformation Columns',              {'fields': ['column_number','column_name','status','pre_value'],'classes': ['collapse']})]
+    extra = 0
 
 
 class DatasetAdmin(admin.ModelAdmin):
@@ -45,8 +47,6 @@ class KeyLinkAdmin(admin.ModelAdmin):
     model = KeyLink
     list_display = ('dataset','keyge1','keyge2','count')
 
-class DSTCAdmin(admin.ModelAdmin):
-    model = DSTColumn
 
 class KeyWordAdmin(admin.ModelAdmin):
     model = KeyWord
@@ -57,19 +57,40 @@ class KeyWordAdmin(admin.ModelAdmin):
         return obj.keyge.keyge
 
 
-# class WordMapAdmin(admin.ModelAdmin):
-#     model = WordMap
-#     list_display = ('dataset', 'word1', 'word2', 'count')
-#     list_filter = ['dataset']
+class WordMapAdmin(admin.ModelAdmin):
+    model = WordMap
+    list_display = ('dataset', 'word1', 'word2', 'count')
+    list_filter = ['dataset']
 
-# admin.site.register(Question, QuestionAdmin)
+
+class WFControlAdmin(admin.ModelAdmin):
+    model = WFControl
+    list_display = ('get_dsStatus','dataset','last_update','source_file_version','chk_collect','chk_prepare','chk_commute','chk_mapreduce')
+    list_filter = ['dataset']
+
+
+    @admin.display(description='DS Status', ordering='dataset__update_ds')
+    def get_dsStatus(self, obj):
+        return obj.dataset.update_ds
+
+
+class DSTCAdmin(admin.ModelAdmin):
+    model = DSTColumn
+    list_display = ('dataset','status','column_number','column_name','pre_value')
+    list_filter = ['dataset']
+
+
 admin.site.register(Database, DatabaseAdmin)
 admin.site.register(Dataset, DatasetAdmin)
 admin.site.register(Group)
 admin.site.register(Category)
-admin.site.register(WFControl)
+admin.site.register(PrefixOpc)
+admin.site.register(WFControl, WFControlAdmin)
 admin.site.register(Keyge, KeygeAdmin)
 admin.site.register(KeyWord, KeyWordAdmin)
-# admin.site.register(WordMap, WordMapAdmin)
+admin.site.register(WordMap, WordMapAdmin)
 admin.site.register(KeyLink, KeyLinkAdmin)
 admin.site.register(DSTColumn, DSTCAdmin)
+
+
+

@@ -1,6 +1,14 @@
 from pyexpat import model
-from django.db import models
+from django.db import models, connection
 
+
+"""
+Important:
+Whenever you add a new table, you will need to update the Maintenance and Admin processes
+"""
+
+
+# Data Master to collecting data
 
 class Database(models.Model):
     database = models.CharField(max_length=20, unique=True)
@@ -10,6 +18,14 @@ class Database(models.Model):
 
     def __str__(self):
         return self.database
+
+    class Meta:
+        verbose_name_plural = "Database"
+
+    @classmethod
+    def truncate(cls):
+        with connection.cursor() as cursor:
+            cursor.execute('TRUNCATE TABLE {} CASCADE'.format(cls._meta.db_table))
 
 
 class Dataset(models.Model):
@@ -30,6 +46,48 @@ class Dataset(models.Model):
     def __str__(self):
         return self.dataset
 
+    class Meta:
+        verbose_name_plural = "Dataset"
+
+    @classmethod
+    def truncate(cls):
+        with connection.cursor() as cursor:
+            cursor.execute('TRUNCATE TABLE {} CASCADE'.format(cls._meta.db_table))
+
+
+class PrefixOpc(models.Model):
+    pre_value = models.CharField(max_length=5, primary_key=True, verbose_name='Value Prefix')
+
+    def __str__(self):
+        return self.pre_value
+
+    class Meta:
+        verbose_name_plural = "Keyge - Prefix"
+
+    @classmethod
+    def truncate(cls):
+        with connection.cursor() as cursor:
+            cursor.execute('TRUNCATE TABLE {} CASCADE'.format(cls._meta.db_table))
+
+
+class DSTColumn(models.Model):
+    dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE)
+    status = models.BooleanField(default=False, verbose_name='Active?')
+    column_number = models.IntegerField(default=0, verbose_name='Column Sequence')
+    column_name = models.CharField(max_length=40, blank=True, verbose_name='Column Name')
+    # pre_choice = models.BooleanField(default=False, verbose_name='Prefix?')
+    # pre_value = models.CharField(max_length=5, blank=True, verbose_name='Value Prefix')
+    pre_value = models.ForeignKey(PrefixOpc, on_delete=models.CASCADE, default='None', verbose_name='Prefix')
+
+    class Meta:
+        verbose_name_plural = "Dataset - Columns"
+
+    @classmethod
+    def truncate(cls):
+        with connection.cursor() as cursor:
+            cursor.execute('TRUNCATE TABLE {} CASCADE'.format(cls._meta.db_table))
+
+
 class WFControl(models.Model):
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE)
     last_update = models.DateTimeField(verbose_name="Last Update Dataset")
@@ -41,6 +99,14 @@ class WFControl(models.Model):
     chk_commute = models.BooleanField(default=False, verbose_name='Commute Processed')
     chk_mapreduce = models.BooleanField(default=False, verbose_name='MapReduce Processed')
 
+    class Meta:
+        verbose_name_plural = "Dataset - Workflow"
+
+    @classmethod
+    def truncate(cls):
+        with connection.cursor() as cursor:
+            cursor.execute('TRUNCATE TABLE {} CASCADE'.format(cls._meta.db_table))
+
 
 class LogsCollector(models.Model):
     source_file_name = models.CharField(max_length=200)
@@ -51,6 +117,16 @@ class LogsCollector(models.Model):
     status = models.BooleanField(default=True)
     size = models.IntegerField(default=0)
 
+    class Meta:
+        verbose_name_plural = "Process Log"
+
+    @classmethod
+    def truncate(cls):
+        with connection.cursor() as cursor:
+            cursor.execute('TRUNCATE TABLE {} CASCADE'.format(cls._meta.db_table))
+
+
+# Master Data to terms control
 
 class Group(models.Model):
     group = models.CharField(max_length=20, unique=True)
@@ -58,6 +134,14 @@ class Group(models.Model):
 
     def __str__(self):
         return self.group
+
+    class Meta:
+        verbose_name_plural = "Keyge - Group"
+
+    @classmethod
+    def truncate(cls):
+        with connection.cursor() as cursor:
+            cursor.execute('TRUNCATE TABLE {} CASCADE'.format(cls._meta.db_table))
 
 
 class Category(models.Model):
@@ -68,7 +152,12 @@ class Category(models.Model):
         return self.category
 
     class Meta:
-        verbose_name_plural = "Categories"
+        verbose_name_plural = "Keyge - Category"
+    
+    @classmethod
+    def truncate(cls):
+        with connection.cursor() as cursor:
+            cursor.execute('TRUNCATE TABLE {} CASCADE'.format(cls._meta.db_table))
 
 
 class Keyge(models.Model):
@@ -79,8 +168,30 @@ class Keyge(models.Model):
 
     def __str__(self):
         return self.keyge
+    
+    class Meta:
+        verbose_name_plural = "Keyge"
+
+    @classmethod
+    def truncate(cls):
+        with connection.cursor() as cursor:
+            cursor.execute('TRUNCATE TABLE {} CASCADE'.format(cls._meta.db_table))
 
 
+class KeyHierarchy(models.Model):
+    keyge = models.ForeignKey(Keyge, related_name='key_child', on_delete=models.CASCADE, verbose_name='Keyge ID')
+    keyge_parent = models.ForeignKey(Keyge, related_name='key_parent', on_delete=models.CASCADE, verbose_name='Keyge Parent ID')
+
+    class Meta:
+        verbose_name_plural = "Keyge - Hierarchy"
+
+    @classmethod
+    def truncate(cls):
+        with connection.cursor() as cursor:
+            cursor.execute('TRUNCATE TABLE {} CASCADE'.format(cls._meta.db_table))
+
+
+# Commute word to keyge
 class KeyWord(models.Model):
     word = models.CharField(max_length=100, primary_key=True)
     keyge = models.ForeignKey(Keyge, on_delete=models.CASCADE)
@@ -90,6 +201,15 @@ class KeyWord(models.Model):
     def __str__(self):
         linker = str(self.keyge) + " - " + str(self.word)
         return linker
+    
+    class Meta:
+        verbose_name_plural = "Keyge - Word"
+
+    @classmethod
+    def truncate(cls):
+        with connection.cursor() as cursor:
+            cursor.execute('TRUNCATE TABLE {} CASCADE'.format(cls._meta.db_table))
+
 
 
 class WordMap(models.Model):
@@ -107,6 +227,14 @@ class WordMap(models.Model):
     def __str__(self):
         linker = str(self.word1) + " - " + str(self.word2)
         return linker
+    
+    class Meta:
+        verbose_name_plural = "Links - Word"
+
+    @classmethod
+    def truncate(cls):
+        with connection.cursor() as cursor:
+            cursor.execute('TRUNCATE TABLE {} CASCADE'.format(cls._meta.db_table))
 
 
 class KeyLink(models.Model):
@@ -118,15 +246,10 @@ class KeyLink(models.Model):
                                on_delete=models.CASCADE)
     count = models.IntegerField(default=0)
 
+    class Meta:
+        verbose_name_plural = "Links - Keyge"
 
-class DSTColumn(models.Model):
-    dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE)
-    status = models.BooleanField(default=False, verbose_name='Active?')
-    column_number = models.IntegerField(default=0, verbose_name='Column Sequence')
-    column_name = models.CharField(max_length=40, blank=True, verbose_name='Column Name')
-    pre_choice = models.BooleanField(default=False, verbose_name='Prefix?')
-    pre_value = models.CharField(max_length=5, blank=True, verbose_name='Value Prefix')
-
-class KeyHierarchy(models.Model):
-    keyge = models.ForeignKey(Keyge, related_name='key_child', on_delete=models.CASCADE, verbose_name='Keyge ID')
-    keyge_parent = models.ForeignKey(Keyge, related_name='key_parent', on_delete=models.CASCADE, verbose_name='Keyge Parent ID')
+    @classmethod
+    def truncate(cls):
+        with connection.cursor() as cursor:
+            cursor.execute('TRUNCATE TABLE {} CASCADE'.format(cls._meta.db_table))
