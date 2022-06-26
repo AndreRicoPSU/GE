@@ -7,3 +7,25 @@ Jun 22 - Modificacoes
  >> eliminar todas as palavras que nao tenham prefixo
 
  .. Ter um campo de apoio para configurar isso
+
+ 
+ o que eu preciso fazer
+ documentar o processo de instalacao no ICDS
+1. criar commandos para apagar dados mestres (e tb limpar a base)
+2. desenvolver o processo de manter somente palavras com prefixo
+3. documentar o processo de cadastro de datasets
+4. realizar a carga das datasets
+5. processos acia
+
+Jun 23 > documentacao do processo no ICDS
+
+Jun 24 > Teste no ICDS
+--Erro se o arquivo esta compactado e nao esta com o flag de compactado
+-- criada tabela para controle de prefix 
+
+Para documentacao
+>> processo de eliminacao de dados
+>> processo para extracao de dados via linha de comando
+
+ERROS
+>> tratar quando o download for 
