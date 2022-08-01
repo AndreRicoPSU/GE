@@ -176,9 +176,22 @@ class Command(BaseCommand):
 
                     # Unzip source file
                     if qs.source_compact:
-                        self.stdout.write(self.style.MIGRATE_LABEL('   Starting the file unzipping process'))
-                        patoolib.extract_archive(str(v_source_file), outdir=str(v_dir))
-                        os.remove(v_source_file)
+                        try:
+                            self.stdout.write(self.style.MIGRATE_LABEL('   Starting the file unzipping process'))
+                            patoolib.extract_archive(str(v_source_file), outdir=str(v_dir))
+                            os.remove(v_source_file)
+                        except:
+                            self.stdout.write(self.style.MIGRATE_LABEL('   There was a failure to unzip the file'))
+
+                    # Check if target file is ok
+                    if not os.path.exists(v_target_file):
+                        self.stdout.write(self.style.ERROR('   error reading the file after unzipping. Possible cause: check if the names of the source and destination files are correct in the dataset table.'))
+                        qs_wfc.source_file_version = "ERROR"
+                        qs_wfc.last_update = timezone.now()
+                        qs_wfc.save()
+                        for i in os.listdir(v_dir):
+                            os.remove(v_dir + "/" + i)
+                        continue
 
                     # Update WorkFlow Control table:
                     self.stdout.write(self.style.MIGRATE_LABEL('   Updating Dataset Control Data'))

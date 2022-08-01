@@ -1,31 +1,38 @@
 
-Jun 22 - Modificacoes
- >> desativamos o WordMaps
- >> eliminado o Posfix filds
- >> criada a tabela de hieraquia de keys
- >> Todas as Keys deverao ter prefixo
- >> eliminar todas as palavras que nao tenham prefixo
+Activities for the week
+1. Input the master data into GE.db. Data has already been loaded:
+- Databases
+- Data sets
+- Group - Keyge
+- Category – Keyge
+- Keyge (chemicals, genes, diseases, paths, and anatomy) CTD data originates from the NIH. I removed the CTD prefixes and added them to us.
+* The files already processed are in the loader folder.
+Pending:
+-          Raise other keyge and prefixes
+-          Prepare loads for Links between keyge and word
+2 . I have already simulated to load data for the entire production environment of the data from the sources.
+3. Improve the documentation process with all commands already created at the moment.
+  
 
- .. Ter um campo de apoio para configurar isso
 
- 
- o que eu preciso fazer
- documentar o processo de instalacao no ICDS
-1. criar commandos para apagar dados mestres (e tb limpar a base)
-2. desenvolver o processo de manter somente palavras com prefixo
-3. documentar o processo de cadastro de datasets
-4. realizar a carga das datasets
-5. processos acia
+Processes under development:
+Continue the development of the process filter
+Explain a web interface for other functionality.
+Optional: Create a Keyge Links extractor to query in Tableau or other Data Visualization tools
 
-Jun 23 > documentacao do processo no ICDS
 
-Jun 24 > Teste no ICDS
---Erro se o arquivo esta compactado e nao esta com o flag de compactado
--- criada tabela para controle de prefix 
+Novas funcoes implementadas Jul 6
+ - Adicionado campo para opcao de manter os arquivos baixados
+ - Rotina em Prepare para eliminar ou manter arquivos baixados
+ - Tratamento quando temos compactacao e os arquivos estao com os mesmos nomes do cadastro do dataset
 
-Para documentacao
->> processo de eliminacao de dados
->> processo para extracao de dados via linha de comando
+Agosto 1 / 2022
+- Implementar campo de pesquisa no ADMIN
+- Preparar dados mestres
 
-ERROS
->> tratar quando o download for 
+
+
+
+
+PARA ATUALIZAR NO ICDS
+-- GE/ADMIN

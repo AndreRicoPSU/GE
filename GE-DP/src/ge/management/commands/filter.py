@@ -25,7 +25,7 @@ class Command(BaseCommand):
         )
 
         parser.add_argument(
-            '--dataset',
+            '--database',
             action='store_true',
             help='get data on tables',
         )
@@ -38,6 +38,18 @@ class Command(BaseCommand):
     
         parser.add_argument(
             '--keylink',
+            action='store_true',
+            help='get data on tables',
+        )
+
+        parser.add_argument(
+            '--group',
+            action='store_true',
+            help='get data on tables',
+        )
+
+        parser.add_argument(
+            '--category',
             action='store_true',
             help='get data on tables',
         )
@@ -104,3 +116,15 @@ class Command(BaseCommand):
             dataset = convert_to_dataframe(qs, fields=['keyge1','keyge2'], index=False)
             print(dataset)
             dataset.to_csv('loader/output_from_filter.csv')
+
+        if options['group']:
+            qs = Group.objects.all()
+            dataset = convert_to_dataframe(qs)
+            print(dataset)
+            # dataset.to_csv('loader/output_from_filter.csv')
+
+        if options['category']:
+            qs = Category.objects.all()
+            dataset = convert_to_dataframe(qs)
+            print(dataset)
+            # dataset.to_csv('loader/output_from_filter.csv')

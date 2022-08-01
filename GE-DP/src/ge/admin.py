@@ -6,7 +6,7 @@ class DatabaseAdmin(admin.ModelAdmin):
     model = Database
     list_display = ('database', 'category', 'description')
     list_filter = ['category']
-
+    search_fields = ['database']
 
 
 
@@ -21,7 +21,7 @@ class DatasetAdmin(admin.ModelAdmin):
     fieldsets = [
         (None,              {'fields': ['database','dataset','description','update_ds']}),
         # ('Log',             {'fields': [last_update','source_file_size','target_file_size','source_file_version'],'classes': ['collapse']}),
-        ('Attributes',      {'fields': ['source_web','source_path','source_file_name','source_file_format','source_file_sep','source_file_skiprow','source_compact','target_file_name','target_file_format'],'classes': ['collapse']}), 
+        ('Attributes',      {'fields': ['source_web','source_path','source_file_name','source_file_format','source_file_sep','source_file_skiprow','source_compact','target_file_name','target_file_format','target_file_keep'],'classes': ['collapse']}), 
     ]
     
     inlines = [ChoiceDSTColumn]
@@ -29,11 +29,13 @@ class DatasetAdmin(admin.ModelAdmin):
     # model = Dataset
     list_display = ('database', 'dataset', 'update_ds', 'description')
     list_filter = ['update_ds','database']
+    search_fields = ['dataset']
 
 class KeygeAdmin(admin.ModelAdmin):
     model = Keyge
-    list_display = ('id','keyge','get_group','get_category')
+    list_display = ('keyge','get_group','get_category','description')
     list_filter = ['group_id','category_id']
+    search_fields = ['keyge','description ']
 
     @admin.display(description='Group Name', ordering='group__group')
     def get_group(self, obj):
@@ -42,15 +44,17 @@ class KeygeAdmin(admin.ModelAdmin):
     @admin.display(description='Category Name', ordering='category__category')
     def get_category(self, obj):
         return obj.category.category
+    
 
 class KeyLinkAdmin(admin.ModelAdmin):
     model = KeyLink
     list_display = ('dataset','keyge1','keyge2','count')
-
+    search_fields = ['keyge1', 'keyge2']
 
 class KeyWordAdmin(admin.ModelAdmin):
     model = KeyWord
-    list_display = ('keyge_id','get_keyge','word','status','commute')
+    list_display = ('get_keyge','word','status','commute')
+    search_fields = ['keyge', 'word']
 
     @admin.display(description='Keyge', ordering='keyge__keyge')
     def get_keyge(self, obj):

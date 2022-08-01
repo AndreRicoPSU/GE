@@ -42,6 +42,7 @@ class Dataset(models.Model):
     source_file_skiprow = models.IntegerField(default=0) 
     target_file_name = models.CharField(max_length=200)
     target_file_format = models.CharField(max_length=200)
+    target_file_keep = models.BooleanField(default=False, verbose_name='Keep file')
 
     def __str__(self):
         return self.dataset

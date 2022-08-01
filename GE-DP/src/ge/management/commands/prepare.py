@@ -14,6 +14,7 @@ Subprocess:
     2. Deleting unnecessary columns
     3. Transforming ID columns with identifiers
     4. Replacement of terms
+    5. Optional, delete source file
 
 Pendencies:
  - This first moment read all file, but improve to read in chunck to save memory 
@@ -122,6 +123,10 @@ class Command(BaseCommand):
 
                 # Write the file
                 df_target.to_csv(v_target)
+
+                # Delete source file
+                if not qs.target_file_keep: 
+                    os.remove(v_target_file)
 
                 self.stdout.write(self.style.SUCCESS('   Data preparation success to: %s' % qs.dataset))
 

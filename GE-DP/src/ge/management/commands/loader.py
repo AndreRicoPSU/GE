@@ -1,4 +1,5 @@
 from pydoc import describe
+from telnetlib import STATUS
 from tokenize import group
 from unicodedata import category
 from django.utils import timezone
@@ -178,6 +179,8 @@ class Command(BaseCommand):
             model_instances = [KeyWord(
                 keyge_id = record.keyge_id,
                 word = record.word,
+                status = record.status,
+                commute = record.commute,
                 ) for record in DFR.itertuples()]
             KeyWord.objects.bulk_create(model_instances, ignore_conflicts=True) 
             self.stdout.write(self.style.SUCCESS('Load with success to Key-Words'))
