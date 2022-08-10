@@ -26,13 +26,20 @@ Novas funcoes implementadas Jul 6
  - Rotina em Prepare para eliminar ou manter arquivos baixados
  - Tratamento quando temos compactacao e os arquivos estao com os mesmos nomes do cadastro do dataset
 
+
 Agosto 1 / 2022
 - Implementar campo de pesquisa no ADMIN
 - Preparar dados mestres
 
+Agosto 5 / 2022
+- criar script para converter xml para csv (ler arquivos do HMDB)
 
 
 
 
-PARA ATUALIZAR NO ICDS
--- GE/ADMIN
+Proximos passos:
+--> Verificar se temos mais palavras para carregar
+--> simular uma carrega
+--> Tutorial do sistema
+--> desenvolver interface via commande line para filtro.
+--> desenvolver interface WEB para consultas. 

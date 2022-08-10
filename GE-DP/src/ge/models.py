@@ -194,7 +194,7 @@ class KeyHierarchy(models.Model):
 
 # Commute word to keyge
 class KeyWord(models.Model):
-    word = models.CharField(max_length=100, primary_key=True)
+    word = models.CharField(max_length=400, primary_key=True)
     keyge = models.ForeignKey(Keyge, on_delete=models.CASCADE)
     status = models.BooleanField(default=False, verbose_name='Active?')
     commute = models.BooleanField(default=False, verbose_name='Commute?')
