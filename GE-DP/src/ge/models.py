@@ -92,13 +92,13 @@ class DSTColumn(models.Model):
 class WFControl(models.Model):
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE)
     last_update = models.DateTimeField(verbose_name="Last Update Dataset")
-    source_file_version = models.CharField(max_length=200)
-    source_file_size = models.IntegerField(default=0)
-    target_file_size = models.IntegerField(default=0)
+    source_file_version = models.CharField(max_length=500)
+    source_file_size = models.BigIntegerField(default=0)
+    target_file_size = models.BigIntegerField(default=0)
     chk_collect = models.BooleanField(default=False, verbose_name='Collect Processed')
     chk_prepare = models.BooleanField(default=False, verbose_name='Prepare Processed')
-    chk_commute = models.BooleanField(default=False, verbose_name='Commute Processed')
-    chk_mapreduce = models.BooleanField(default=False, verbose_name='MapReduce Processed')
+    chk_map = models.BooleanField(default=False, verbose_name='Map Processed')
+    chk_reduce = models.BooleanField(default=False, verbose_name='Reduce Processed')
 
     class Meta:
         verbose_name_plural = "Dataset - Workflow"

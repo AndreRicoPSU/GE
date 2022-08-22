@@ -29,13 +29,13 @@ class DatasetAdmin(admin.ModelAdmin):
     # model = Dataset
     list_display = ('database', 'dataset', 'update_ds', 'description')
     list_filter = ['update_ds','database']
-    search_fields = ['dataset']
+    search_fields = ['dataset','description']
 
 class KeygeAdmin(admin.ModelAdmin):
     model = Keyge
     list_display = ('keyge','get_group','get_category','description')
     list_filter = ['group_id','category_id']
-    search_fields = ['keyge','description ']
+    search_fields = ['keyge','description']
 
     @admin.display(description='Group Name', ordering='group__group')
     def get_group(self, obj):
@@ -49,12 +49,15 @@ class KeygeAdmin(admin.ModelAdmin):
 class KeyLinkAdmin(admin.ModelAdmin):
     model = KeyLink
     list_display = ('dataset','keyge1','keyge2','count')
-    search_fields = ['keyge1', 'keyge2']
+    list_filter = ['dataset']
+    #search_fields = ['keyge1']
+
 
 class KeyWordAdmin(admin.ModelAdmin):
     model = KeyWord
     list_display = ('get_keyge','word','status','commute')
-    search_fields = ['keyge', 'word']
+    list_filter = ['status','commute']
+    search_fields = ['word']
 
     @admin.display(description='Keyge', ordering='keyge__keyge')
     def get_keyge(self, obj):
@@ -69,7 +72,7 @@ class WordMapAdmin(admin.ModelAdmin):
 
 class WFControlAdmin(admin.ModelAdmin):
     model = WFControl
-    list_display = ('get_dsStatus','dataset','last_update','source_file_version','chk_collect','chk_prepare','chk_commute','chk_mapreduce')
+    list_display = ('get_dsStatus','dataset','last_update','source_file_version','chk_collect','chk_prepare','chk_map','chk_reduce')
     list_filter = ['dataset']
 
 

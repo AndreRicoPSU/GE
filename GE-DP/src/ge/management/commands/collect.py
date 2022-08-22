@@ -1,11 +1,14 @@
-from curses import update_lines_cols
+# from clint.textui import progress
+# from curses import update_lines_cols
+# from turtle import update
 import os
-from turtle import update
+import sys
 import requests
 import patoolib
+import time
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from ge.models import Dataset, LogsCollector, WFControl
+from ge.models import Dataset, WFControl
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -28,7 +31,11 @@ Options:
 
 Pendencies
  - Create setting to active logs
- - Subprocess to run one dataset
+ - How to handle zip with multi files
+
+ - Add download process
+    Clint isn't works ()
+
 """
 
 class Command(BaseCommand):
@@ -79,23 +86,33 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        # Config PSA folder (persistent staging area)
         v_path_file = str(settings.BASE_DIR) + "/psa/"
 
         if options['run']:
-            # Only update registers will process = true
-            if  options['run'] == 'all':           
-                qs_queryset = Dataset.objects.filter(update_ds=True)
+            v_time_process = time.time()                   
+            v_opt_ds = str(options['run']).lower()
+            
+            self.stdout.write(self.style.HTTP_NOT_MODIFIED('Start: Process to collect external databases'))
+     
+
+
+            if  v_opt_ds == 'all': 
+                v_where_cs = {'update_ds': True}
             else:
-                try:
-                    qs_queryset = Dataset.objects.filter(dataset = options['run'], update_ds=True)
-                except ObjectDoesNotExist:
-                    self.stdout.write(self.style.NOTICE('   Dataset not found'))
-                if not qs_queryset:
-                    self.stdout.write(self.style.NOTICE('   Dataset not found')) 
+                v_where_cs = {'update_ds': True, 'dataset': v_opt_ds}
+            try:
+                qs_queryset = Dataset.objects.filter(**v_where_cs)
+            except ObjectDoesNotExist:
+                self.stdout.write(self.style.HTTP_BAD_REQUEST('  Datasets not found or disabled'))
+                sys.exit(2)
+            if not qs_queryset:
+                self.stdout.write(self.style.HTTP_BAD_REQUEST('  Datasets not found or disabled'))
+                sys.exit(2)
+
 
             for qs in qs_queryset:
-                self.stdout.write(self.style.WARNING('Starting the dataset: %s' % qs.dataset))
+                self.stdout.write(self.style.HTTP_NOT_MODIFIED ('  Start: Run database {0} on dataset {1}'.format(qs.database, qs.dataset)))
+                v_time_ds = time.time()
 
                 # Variables                    
                 v_dir = v_path_file + qs.dataset
@@ -113,7 +130,7 @@ class Command(BaseCommand):
                     v_version = str(requests.get(v_file_url, stream=True).headers["etag"])
                 except:
                     v_version = "0"
-                    self.stdout.write(self.style.WARNING("   Could not find the version of the file. Assigned a random version"))
+                    self.stdout.write(self.style.HTTP_NOT_FOUND("    Could not find the version of the file. Assigned a random version"))
                 
                 # Get WorkFlow Control
                 try:
@@ -127,8 +144,8 @@ class Command(BaseCommand):
                         target_file_size = 0,
                         chk_collect = False,
                         chk_prepare = False,
-                        chk_commute = False,
-                        chk_mapreduce = False
+                        chk_map = False,
+                        chk_reduce = False
                     )
                     qs_control.save()
                     qs_wfc = WFControl.objects.get(dataset_id = qs.id)
@@ -145,7 +162,7 @@ class Command(BaseCommand):
                     #                     status = False,
                     #                     size = 0) 
                     # log.save() 
-                    self.stdout.write(self.style.MIGRATE_LABEL('   Version already loaded in: %s' % qs_wfc.last_update))          
+                    self.stdout.write(self.style.HTTP_INFO('    Version already loaded in: {0}'.format(qs_wfc.last_update)))          
                 
                 # New file version, start download
                 else:   
@@ -154,13 +171,19 @@ class Command(BaseCommand):
                     if os.path.exists(v_source_file):
                         os.remove(v_source_file)
 
-                    self.stdout.write(self.style.MIGRATE_LABEL('   Starting download'))           
+                    
+                    self.stdout.write(self.style.HTTP_SUCCESS('    Download start'))   
+
                     r = requests.get(v_file_url, stream=True)
-                    with open(v_source_file, "wb") as download:
+                    with open(v_source_file, "wb") as f:
+                        # total_length = int(r.headers.get('content-length'))
+                        # for chunk in progress.bar(r.iter_content(chunk_size=1024), expected_size=(total_length/1024) + 1):
                         for chunk in r.iter_content(chunk_size=1000000):
                                 if chunk:
-                                    download.write(chunk)  # Improve Point
-                    
+                                    f.write(chunk)
+                                    f.flush()
+
+
                     # Update LOG table if new version
                     v_size = str(os.stat(v_source_file).st_size)
                     # Create a LOG setting control (optional to log control)
@@ -172,20 +195,22 @@ class Command(BaseCommand):
                     #                     status = True,
                     #                     size = v_size) 
                     # log.save()
-                    self.stdout.write(self.style.SUCCESS('   Download successful'))
+                    self.stdout.write(self.style.HTTP_SUCCESS('    Download finish')) 
 
                     # Unzip source file
                     if qs.source_compact:
                         try:
-                            self.stdout.write(self.style.MIGRATE_LABEL('   Starting the file unzipping process'))
-                            patoolib.extract_archive(str(v_source_file), outdir=str(v_dir))
+                            self.stdout.write(self.style.HTTP_SUCCESS('    Unzip start')) 
+                            patoolib.extract_archive(str(v_source_file), outdir=str(v_dir), verbosity=-1) 
                             os.remove(v_source_file)
                         except:
-                            self.stdout.write(self.style.MIGRATE_LABEL('   There was a failure to unzip the file'))
+                            self.stdout.write(self.style.HTTP_BAD_REQUEST('    Failed to unzip file'))
+                            continue
 
                     # Check if target file is ok
-                    if not os.path.exists(v_target_file):
-                        self.stdout.write(self.style.ERROR('   error reading the file after unzipping. Possible cause: check if the names of the source and destination files are correct in the dataset table.'))
+                    if not os.path.exists(v_target_file): 
+                        self.stdout.write(self.style.HTTP_BAD_REQUEST('    Failed to read file'))
+                        self.stdout.write(self.style.HTTP_SUCCESS('       Possible cause: check if the names of the source and destination files are correct in the dataset table'))
                         qs_wfc.source_file_version = "ERROR"
                         qs_wfc.last_update = timezone.now()
                         qs_wfc.save()
@@ -194,20 +219,27 @@ class Command(BaseCommand):
                         continue
 
                     # Update WorkFlow Control table:
-                    self.stdout.write(self.style.MIGRATE_LABEL('   Updating Dataset Control Data'))
+                    self.stdout.write(self.style.HTTP_SUCCESS('    Update workflow control'))
                     qs_wfc.source_file_version = v_version
                     qs_wfc.source_file_size = v_size
                     qs_wfc.target_file_size = str(os.stat(v_target_file).st_size)
                     qs_wfc.last_update = timezone.now()
                     qs_wfc.chk_collect = True
                     qs_wfc.chk_prepare = False
-                    qs_wfc.chk_commute = False
-                    qs_wfc.mapreduce = False
+                    qs_wfc.chk_map = False
+                    qs_wfc.reduce = False
                     qs_wfc.save()
+
+                    self.stdout.write(self.style.HTTP_REDIRECT('    Dataset loaded in {0} seconds'.format(int(time.time() - v_time_ds))))
+                   
+                self.stdout.write(self.style.SUCCESS('End of process in {0} seconds'.format(int(time.time() - v_time_process))))
+
 
 
         if options['reset']:
-            if  options['reset'] == 'all':
+            v_opt_ds = str(options['reset']).lower()
+              
+            if  v_opt_ds == 'all':
                 qs_wfc = WFControl.objects.all()
                 qs_wfc.update(last_update = timezone.now(),
                                 source_file_version = 0,
@@ -215,40 +247,40 @@ class Command(BaseCommand):
                                 target_file_size = 0,
                                 chk_collect = False,
                                 chk_prepare = False,
-                                chk_commute = False,
-                                chk_mapreduce = False)                  
-                self.stdout.write(self.style.SUCCESS('All dataset versio control has been reset'))
+                                chk_map = False,
+                                chk_reduce = False)                  
+                self.stdout.write(self.style.SUCCESS('All datasets are defined for the prepare step'))
             else:
                 try:
-                    qs_wfc = WFControl.objects.get(dataset_id__dataset = options['reset'])
+                    qs_wfc = WFControl.objects.get(dataset_id__dataset = v_opt_ds)
                     qs_wfc.last_update = timezone.now()
                     qs_wfc.source_file_version = 0
                     qs_wfc.source_file_size = 0
                     qs_wfc.target_file_size = 0
                     qs_wfc.chk_collect = False
                     qs_wfc.chk_prepare = False
-                    qs_wfc.chk_commute = False
-                    qs_wfc.chk_mapreduce = False
+                    qs_wfc.chk_map = False
+                    qs_wfc.chk_reduce = False
                     qs_wfc.save()                  
-                    self.stdout.write(self.style.SUCCESS('dataset versio control has been reset'))
+                    self.stdout.write(self.style.SUCCESS('Dataset {0} is defined for the prepare step'.format(v_opt_ds)))
                 except ObjectDoesNotExist:
-                    self.stdout.write(self.style.ERROR('Could not find dataset'))
-
-
-
-
+                    self.stdout.write(self.style.HTTP_NOT_FOUND('dataset {0} not fount'.format(v_opt_ds)))
+  
 
         if options['show']:
-            qs_queryset = Dataset.objects.all()
+            qs_queryset = Dataset.objects.all().order_by('database')
+            v_db = 0
             for qs in qs_queryset:
-                self.stdout.write(self.style.HTTP_INFO(qs.database))
-                print("  ID:",qs.id)
-                print("  Database:",qs.database)
-                print("  Status:",qs.update_ds)     
+                if v_db != qs.database:
+                    self.stdout.write(self.style.HTTP_NOT_MODIFIED(qs.database))
+                self.stdout.write(self.style.HTTP_SUCCESS('  Id: {0} - status: {2} - dataset: {1}'.format(qs.id, qs.dataset, qs.update_ds)))    
+                v_db = qs.database
+
 
         if options['activate']:
             try:
-                qs_wfc = Dataset.objects.get(dataset = options['activate'])
+                v_opt_ds = str(options['activate']).lower()
+                qs_wfc = Dataset.objects.get(dataset = v_opt_ds)
                 qs_wfc.update_ds=True
                 qs_wfc.save() 
                 self.stdout.write(self.style.SUCCESS('dataset activated'))
@@ -257,7 +289,8 @@ class Command(BaseCommand):
 
         if options['deactivate']:
             try:
-                qs_wfc = Dataset.objects.get(dataset = options['deactivate'])
+                v_opt_ds = str(options['deactivate']).lower()
+                qs_wfc = Dataset.objects.get(dataset = v_opt_ds)
                 qs_wfc.update_ds=False
                 qs_wfc.save() 
                 self.stdout.write(self.style.SUCCESS('dataset dactivated'))

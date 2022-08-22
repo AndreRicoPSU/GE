@@ -54,11 +54,16 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
+        # Keep all words lower case to match on db values on Commute and MapReduce process    
+        # df_target = df_target.apply(lambda x: x.astype(str).str.lower()) 
+
 
         if options['category']:       
             v_path_file = str(settings.BASE_DIR) + "/loader/category.csv"
             try:
                 DFR = pd.read_csv(v_path_file)
+                DFR = DFR.apply(lambda x: x.astype(str).str.lower()) 
+
             except IOError as e:
                 self.stdout.write(self.style.ERROR('ERRO:')) 
                 print(e)
@@ -74,6 +79,7 @@ class Command(BaseCommand):
             v_path_file = str(settings.BASE_DIR) + "/loader/group.csv"
             try:
                 DFR = pd.read_csv(v_path_file)
+                DFR = DFR.apply(lambda x: x.astype(str).str.lower()) 
             except IOError as e:
                 self.stdout.write(self.style.ERROR('ERRO:')) 
                 print(e)
@@ -89,6 +95,7 @@ class Command(BaseCommand):
             v_path_file = str(settings.BASE_DIR) + "/loader/database.csv"
             try:
                 DFR = pd.read_csv(v_path_file)
+                DFR = DFR.apply(lambda x: x.astype(str).str.lower()) 
             except IOError as e:
                 self.stdout.write(self.style.ERROR('ERRO:')) 
                 print(e)
@@ -109,12 +116,14 @@ class Command(BaseCommand):
             v_path_file = str(settings.BASE_DIR) + "/loader/dataset.csv"
             try:
                 DFR = pd.read_csv(v_path_file)
+                DFR = DFR.apply(lambda x: x.astype(str).str.lower()) 
             except IOError as e:
                 self.stdout.write(self.style.ERROR('ERRO:')) 
                 print(e)
                 sys.exit(2)
             DFDB = pd.DataFrame(list(Database.objects.values()))
             DFR["db_id"] = DFR.set_index("database").index.map(DFDB.set_index("database")["id"])
+            # tratar se nao localizar
             model_instances = [Dataset(
                 dataset = record.dataset,
                 database_id = record.db_id,
@@ -138,6 +147,7 @@ class Command(BaseCommand):
             v_path_file = str(settings.BASE_DIR) + "/loader/keyge.csv"
             try:
                 DFR = pd.read_csv(v_path_file)
+                DFR = DFR.apply(lambda x: x.astype(str).str.lower()) 
             except IOError as e:
                 self.stdout.write(self.style.ERROR('ERRO:')) 
                 print(e)
@@ -166,6 +176,7 @@ class Command(BaseCommand):
             v_path_file = str(settings.BASE_DIR) + "/loader/keyword.csv"
             try:
                 DFR = pd.read_csv(v_path_file)
+                DFR = DFR.apply(lambda x: x.astype(str).str.lower()) 
             except IOError as e:
                 self.stdout.write(self.style.ERROR('ERRO:')) 
                 print(e)

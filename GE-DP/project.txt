@@ -43,3 +43,92 @@ Proximos passos:
 --> Tutorial do sistema
 --> desenvolver interface via commande line para filtro.
 --> desenvolver interface WEB para consultas. 
+
+
+
+Agosto 15
+
+-- Como sem o Commute iremos tratar palavras compostas???
+
+
+Retirada do processo Commute: 
+
+
+
+Commute tem a funcao de substituir 
+
+Aug18
+Testes com o Reduce e MAP individualmente
+
+Aug 19
+- ajuste nos novos processos com o desmembramento do MAPREDUCE
+
+
+
+Inicio do processo todo
+# HTTP_NOT_MODIFIED  -  azul 
+sem espaco
+
+        Avisos antes de processar que impedem o processamento ou aborta o processamento
+        # HTTP_BAD_REQUEST - vermelho fraco
+        Add dois espacos
+
+        Inicio do processaemnto de um dataset
+        # HTTP_NOT_MODIFIED  -  azul 
+        Add dois espaco
+
+                Mensagems normais do processamento do Dataser
+                HTTP_SUCESS  - branco
+                add 4 espacos
+
+                Mensagens de ERRO no processamento do dataset
+                HTTP_BAD_REQUEST - vermelho fraco
+                add 4 espacos
+
+                Mensages de Warning 
+                # HTTP_NOT_FOUND - amarelo claro
+                Add 4 espacos
+
+                termino do processamento do dataset
+                # HTTP_REDIRECT - verde claro
+                add 4 espacos
+
+            Mensages de Warning 
+            # HTTP_NOT_FOUND - amarelo claro
+            Add 2 espacos
+
+            Mensagems se o Dataset esta OK e nao procecissa de processamento
+            HTTP_INFO  - branco
+            add 4 espacos
+
+Termino do processamento do processo
+# SUCESS
+Sem espacos
+
+
+
+
+    #  HTTP_INFO  - branco ngrito
+    # HTTP_SUCESS - branco
+    # HTTP_NOT_MODIFIED  -  azul
+    # HTTP_NOT_FOUND - amarelo claro
+    # HTTP_BAD_REQUEST - vermelho fraco
+    # HTTP_REDIRECT - verde claro
+    # HTTP_SERVER_ERROR - roxo
+    # ERROR    - erro nivel 2
+
+
+
+25 Agosto
+- teste com 9gb de dataset
+- Sincronizar com icds
+- ajustar dados mestres
+- processar duas datasets
+
+- testar ECHO
+- Relatorio ler os outros e fazer o MAPREDUCE
+
+
+Estudar sobre IRB
+Acomparnhar a GOLL4
+
