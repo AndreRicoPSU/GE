@@ -99,6 +99,7 @@ class Command(BaseCommand):
                 DFR.keyge2_id = DFR.keyge2_id.astype(int)  
 
                 v_size = len(DFR.index)
+
                 self.stdout.write(self.style.HTTP_SUCCESS('    {0} records loaded from RoadMap will be aggregated'.format(v_size))) 
                      
                 if not DFR.empty:
@@ -107,7 +108,7 @@ class Command(BaseCommand):
 
                     KeyLink.objects.filter(dataset_id = qs.id).delete()
 
-                    while v_upper <= v_size:
+                    while v_upper <= (v_size+v_chunk):
                         DFRC = (DFR[v_lower:v_upper])
 
                         model_keylink = [KeyLink(
@@ -120,7 +121,7 @@ class Command(BaseCommand):
 
                         KeyLink.objects.bulk_create(model_keylink)
                     
-                        self.stdout.write(self.style.HTTP_SUCCESS('    Writing records from {0} to {1} on KeyLink'.format(v_lower, v_upper))) 
+                        #self.stdout.write(self.style.HTTP_SUCCESS('    Writing records from {0} to {1} on KeyLink'.format(v_lower, v_upper))) 
                         v_lower += v_chunk
                         v_upper += v_chunk
 

@@ -89,7 +89,7 @@ class Command(BaseCommand):
             type=int,
             metavar='chunk size',
             action='store',
-            default=100000,
+            default=1000000,
             help='Rows will be processed per cycle',
         )  
 
@@ -226,7 +226,7 @@ class Command(BaseCommand):
                     WordMap.objects.bulk_create(model_instances)
                     
                     v_row = len(DFR.index)
-                    self.stdout.write(self.style.HTTP_SUCCESS('    Block {0} with {1} combinations processed'.format(v_idx, v_row)))
+                    self.stdout.write(self.style.HTTP_SUCCESS('      Block {0} with {1} combinations processed'.format(v_idx, v_row)))
                           
                     v_idx += 1
                     #if idx > 1:

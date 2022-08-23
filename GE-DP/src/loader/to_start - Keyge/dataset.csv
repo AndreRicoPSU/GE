@@ -1,23 +1,23 @@
-ï»¿database,dataset,update_ds,source_path,source_web,source_compact,source_file_name,source_file_format,source_file_sep,source_file_skiprow,target_file_name,target_file_format,description
-CTD,CTDCGINT,1,http://ctdbase.org/reports/CTD_chem_gene_ixns.csv.gz,1,1,CTD_chem_gene_ixns.csv.gz,GZ,",",0,CTD_chem_gene_ixns.csv,CSV,Chemicalâ€“gene interactions
-CTD,CTDCGINTTYP,0,http://ctdbase.org/reports/CTD_chem_gene_ixn_types.csv.gz,1,1,CTD_chem_gene_ixn_types.csv,GZ,",",0,CTD_chem_gene_ixn_types.csv,CSV,Chemicalâ€“gene interaction types
-CTD,CTDCDASSOC,0,http://ctdbase.org/reports/CTD_chemicals_diseases.csv.gz,1,1,CTD_chemicals_diseases.csv.gz,GZ,",",0,CTD_chemicals_diseases.csv,CSV,Chemicalâ€“disease associations
-CTD,CTDCGOASSO,0,http://ctdbase.org/reports/CTD_chem_go_enriched.csv.gz,1,1,CTD_chem_go_enriched.csv.gz,GZ,",",0,CTD_chem_go_enriched.csv,CSV,Chemicalâ€“GO enriched associations
-CTD,CTDCPASSOC,0,http://ctdbase.org/reports/CTD_chem_pathways_enriched.csv.gz,1,1,CTD_chem_pathways_enriched.csv.gz,GZ,",",0,CTD_chem_pathways_enriched.csv,CSV,Chemicalâ€“pathway enriched associations
-CTD,CTDGDASSOC,0,http://ctdbase.org/reports/CTD_genes_diseases.csv.gz,1,1,CTD_genes_diseases.csv.gz,GZ,",",0,CTD_genes_diseases.csv,CSV,Geneâ€“disease associations
-CTD,CTDGPASSOC,0,http://ctdbase.org/reports/CTD_genes_pathways.csv.gz,1,1,CTD_genes_pathways.csv.gz,GZ,",",0,CTD_genes_pathways.csv,CSV,Geneâ€“pathway associations
-CTD,CTDDPASSOC,0,http://ctdbase.org/reports/CTD_diseases_pathways.csv.gz,1,1,CTD_diseases_pathways.csv.gz,GZ,",",0,CTD_diseases_pathways.csv,CSV,Diseaseâ€“pathway associations
-CTD,CTDCPHASSO,0,http://ctdbase.org/reports/CTD_pheno_term_ixns.csv.gz,1,1,CTD_pheno_term_ixns.csv.gz,GZ,",",0,CTD_pheno_term_ixns.csv,CSV,Chemicalâ€“phenotype interactions
-CTD,CTDESASSOC,0,http://ctdbase.org/reports/CTD_exposure_studies.csv.gz,1,1,CTD_exposure_studies.csv.gz,GZ,",",0,CTD_exposure_studies.csv,CSV,Exposureâ€“study associations
-CTD,CTDEEASSOC,0,http://ctdbase.org/reports/CTD_exposure_events.csv.gz,1,1,CTD_exposure_events.csv.gz,GZ,",",0,CTD_exposure_events.csv,CSV,Exposureâ€“event associations
-CTD,CTDPGODASO,0,http://ctdbase.org/reports/CTD_Phenotype-Disease_biological_process_associations.csv.gz,1,1,CTD_Phenotype-Disease_biological_process_associations.csv.gz,GZ,",",0,CTD_Phenotype-Disease_biological_process_associations.csv,CSV,Phenotype (GO)â€“Disease Biological Process Associations
-CTD,CTDPGODCCA,0,http://ctdbase.org/reports/CTD_Phenotype-Disease_cellular_component_associations.csv.gz,1,1,CTD_Phenotype-Disease_cellular_component_associations.csv.gz,GZ,",",0,CTD_Phenotype-Disease_cellular_component_associations.csv,CSV,Phenotype (GO)â€“Disease Cellular Component Associations
-CTD,CTDPGODMFA,0,http://ctdbase.org/reports/CTD_Phenotype-Disease_molecular_function_associations.csv.gz,1,1,CTD_Phenotype-Disease_molecular_function_associations.csv.gz,GZ,",",0,CTD_Phenotype-Disease_molecular_function_associations.csv,CSV,Phenotype (GO)â€“Disease Molecular Function Associations
-CTD,CTDCHEMVOC,0,http://ctdbase.org/reports/CTD_chemicals.csv.gz,1,1,CTD_chemicals.csv.gz,GZ,",",0,CTD_chemicals.csv,CSV,Chemical vocabulary
-CTD,CTDMEDIC,0,http://ctdbase.org/reports/CTD_diseases.csv.gz,1,1,CTD_diseases.csv.gz,GZ,",",0,CTD_diseases.csv,CSV,Disease vocabulary (MEDIC)
-CTD,CTDANTOVOC,0,http://ctdbase.org/reports/CTD_anatomy.csv.gz,1,1,CTD_anatomy.csv.gz,GZ,",",0,CTD_anatomy.csv,CSV,Anatomy vocabulary
-CTD,CTDGENEVOC,0,http://ctdbase.org/reports/CTD_genes.csv.gz,1,1,CTD_genes.csv.gz,GZ,",",0,CTD_genes.csv,CSV,Gene vocabulary
-CTD,CTDPATHVOC,0,http://ctdbase.org/reports/CTD_pathways.csv.gz,1,1,CTD_pathways.csv.gz,GZ,",",0,CTD_pathways.csv,CSV,Pathway vocabulary
+database,dataset,update_ds,source_path,source_web,source_compact,source_file_name,source_file_format,source_file_sep,source_file_skiprow,target_file_name,target_file_format,description
+CTD,CTDCGINT,1,http://ctdbase.org/reports/CTD_chem_gene_ixns.csv.gz,1,1,CTD_chem_gene_ixns.csv.gz,GZ,",",0,CTD_chem_gene_ixns.csv,CSV,ChemicalÐgene interactions
+CTD,CTDCGINTTYP,0,http://ctdbase.org/reports/CTD_chem_gene_ixn_types.csv.gz,1,1,CTD_chem_gene_ixn_types.csv,GZ,",",0,CTD_chem_gene_ixn_types.csv,CSV,ChemicalÐgene interaction types
+CTD,CTDCDASSOC,0,http://ctdbase.org/reports/CTD_chemicals_diseases.csv.gz,1,1,CTD_chemicals_diseases.csv.gz,GZ,",",0,CTD_chemicals_diseases.csv,CSV,ChemicalÐdisease associations
+CTD,CTDCGOASSO,0,http://ctdbase.org/reports/CTD_chem_go_enriched.csv.gz,1,1,CTD_chem_go_enriched.csv.gz,GZ,",",0,CTD_chem_go_enriched.csv,CSV,ChemicalÐGO enriched associations
+CTD,CTDCPASSOC,0,http://ctdbase.org/reports/CTD_chem_pathways_enriched.csv.gz,1,1,CTD_chem_pathways_enriched.csv.gz,GZ,",",0,CTD_chem_pathways_enriched.csv,CSV,ChemicalÐpathway enriched associations
+CTD,CTDGDASSOC,0,http://ctdbase.org/reports/CTD_genes_diseases.csv.gz,1,1,CTD_genes_diseases.csv.gz,GZ,",",0,CTD_genes_diseases.csv,CSV,GeneÐdisease associations
+CTD,CTDGPASSOC,0,http://ctdbase.org/reports/CTD_genes_pathways.csv.gz,1,1,CTD_genes_pathways.csv.gz,GZ,",",0,CTD_genes_pathways.csv,CSV,GeneÐpathway associations
+CTD,CTDDPASSOC,0,http://ctdbase.org/reports/CTD_diseases_pathways.csv.gz,1,1,CTD_diseases_pathways.csv.gz,GZ,",",0,CTD_diseases_pathways.csv,CSV,DiseaseÐpathway associations
+CTD,CTDCPHASSO,0,http://ctdbase.org/reports/CTD_pheno_term_ixns.csv.gz,1,1,CTD_pheno_term_ixns.csv.gz,GZ,",",0,CTD_pheno_term_ixns.csv,CSV,ChemicalÐphenotype interactions
+CTD,CTDESASSOC,0,http://ctdbase.org/reports/CTD_exposure_studies.csv.gz,1,1,CTD_exposure_studies.csv.gz,GZ,",",0,CTD_exposure_studies.csv,CSV,ExposureÐstudy associations
+CTD,CTDEEASSOC,0,http://ctdbase.org/reports/CTD_exposure_events.csv.gz,1,1,CTD_exposure_events.csv.gz,GZ,",",0,CTD_exposure_events.csv,CSV,ExposureÐevent associations
+CTD,CTDPGODASO,0,http://ctdbase.org/reports/CTD_Phenotype-Disease_biological_process_associations.csv.gz,1,1,CTD_Phenotype-Disease_biological_process_associations.csv.gz,GZ,",",0,CTD_Phenotype-Disease_biological_process_associations.csv,CSV,Phenotype (GO)ÐDisease Biological Process Associations
+CTD,CTDPGODCCA,0,http://ctdbase.org/reports/CTD_Phenotype-Disease_cellular_component_associations.csv.gz,1,1,CTD_Phenotype-Disease_cellular_component_associations.csv.gz,GZ,",",0,CTD_Phenotype-Disease_cellular_component_associations.csv,CSV,Phenotype (GO)ÐDisease Cellular Component Associations
+CTD,CTDPGODMFA,0,http://ctdbase.org/reports/CTD_Phenotype-Disease_molecular_function_associations.csv.gz,1,1,CTD_Phenotype-Disease_molecular_function_associations.csv.gz,GZ,",",0,CTD_Phenotype-Disease_molecular_function_associations.csv,CSV,Phenotype (GO)ÐDisease Molecular Function Associations
+CTD,CTDCHEMVOC,0,http://ctdbase.org/reports/CTD_chemicals.csv.gz,1,1,CTD_chemicals.csv.gz,GZ,",",0,CTD_chemicals.csv,CSV,MASTER DATA - Chemical vocabulary
+CTD,CTDMEDIC,0,http://ctdbase.org/reports/CTD_diseases.csv.gz,1,1,CTD_diseases.csv.gz,GZ,",",0,CTD_diseases.csv,CSV,MASTER DATA - Disease vocabulary (MEDIC)
+CTD,CTDANTOVOC,0,http://ctdbase.org/reports/CTD_anatomy.csv.gz,1,1,CTD_anatomy.csv.gz,GZ,",",0,CTD_anatomy.csv,CSV,MASTER DATA - Anatomy vocabulary
+CTD,CTDGENEVOC,0,http://ctdbase.org/reports/CTD_genes.csv.gz,1,1,CTD_genes.csv.gz,GZ,",",0,CTD_genes.csv,CSV,MASTER DATA - Gene vocabulary
+CTD,CTDPATHVOC,0,http://ctdbase.org/reports/CTD_pathways.csv.gz,1,1,CTD_pathways.csv.gz,GZ,",",0,CTD_pathways.csv,CSV,MASTER DATA - Pathway vocabulary
 HMDB,HMDB_PROT,0,https://hmdb.ca/system/downloads/current/sequences/protein.fasta.zip,1,1,null,null,",",0,null,null,Protein Sequences
 HMDB,HMDB_GENE,0,https://hmdb.ca/system/downloads/current/sequences/gene.fasta.zip,1,1,null,null,",",0,null,null,Gene Sequences
 HMDB,HMDB_STRU,0,https://hmdb.ca/system/downloads/current/structures.zip,1,1,null,null,",",0,null,null,Metabolite Structures

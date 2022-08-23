@@ -123,11 +123,14 @@ Sem espacos
 - teste com 9gb de dataset
 - Sincronizar com icds
 - ajustar dados mestres
+    Ajustar dataset: nao podemos deixar todos em lower case
 - processar duas datasets
+    - via termianl
+    - via job
 
 - testar ECHO
 - Relatorio ler os outros e fazer o MAPREDUCE
-
+- criar rotina para consultar o workflow
 
 Estudar sobre IRB
 Acomparnhar a GOLL4

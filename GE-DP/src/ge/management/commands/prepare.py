@@ -167,7 +167,7 @@ class Command(BaseCommand):
                                 
                             df_target.to_csv(v_target, header=header, mode='a') # Write the file
                             header = False # Prevent creating new header lines
-                            self.stdout.write(self.style.HTTP_SUCCESS('    Block {0} with {1} records processed'.format(v_idx, v_row)))
+                            self.stdout.write(self.style.HTTP_SUCCESS('      Block {0} with {1} records processed'.format(v_idx, v_row)))
 
                             v_idx += 1
 

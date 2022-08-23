@@ -116,7 +116,9 @@ class Command(BaseCommand):
             v_path_file = str(settings.BASE_DIR) + "/loader/dataset.csv"
             try:
                 DFR = pd.read_csv(v_path_file)
-                DFR = DFR.apply(lambda x: x.astype(str).str.lower()) 
+                # DFR = DFR.apply(lambda x: x.astype(str).str.lower()) 
+                DFR['database'] = DFR['database'].str.lower()
+                DFR['dataset'] = DFR['dataset'].str.lower()
             except IOError as e:
                 self.stdout.write(self.style.ERROR('ERRO:')) 
                 print(e)

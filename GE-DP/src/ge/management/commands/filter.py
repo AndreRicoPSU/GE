@@ -54,6 +54,12 @@ class Command(BaseCommand):
             help='get data on tables',
         )
 
+        parser.add_argument(
+            '--workflow',
+            action='store_true',
+            help='get data on tables',
+        )
+
 
     def handle(self, *args, **options):
 
@@ -92,6 +98,11 @@ class Command(BaseCommand):
             return df
         
 
+        if options['workflow']:
+            qs = WFControl.objects.all()
+            #dataset = convert_to_dataframe(qs, fields=['id','database'], index=False)
+            print(dataset)
+            dataset.to_csv('loader/output_from_filter.csv')
 
         if options['dataset']:
             qs = Dataset.objects.all()

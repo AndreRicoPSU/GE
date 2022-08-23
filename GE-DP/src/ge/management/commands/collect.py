@@ -36,6 +36,9 @@ Pendencies
  - Add download process
     Clint isn't works ()
 
+- Criar um check para conferir se o link eh valido ou nao.
+- no load da Dataset nao posso mudar tudo para lowcase
+
 """
 
 class Command(BaseCommand):
@@ -232,7 +235,7 @@ class Command(BaseCommand):
 
                     self.stdout.write(self.style.HTTP_REDIRECT('    Dataset loaded in {0} seconds'.format(int(time.time() - v_time_ds))))
                    
-                self.stdout.write(self.style.SUCCESS('End of process in {0} seconds'.format(int(time.time() - v_time_process))))
+            self.stdout.write(self.style.SUCCESS('End of process in {0} seconds'.format(int(time.time() - v_time_process))))
 
 
 
