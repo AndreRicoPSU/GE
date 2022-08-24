@@ -12,6 +12,51 @@ import django
 django.setup()
 
 
+
+
+
+# melhorar o processo.
+# class Command(BaseCommand):
+#     help = "Command to import a list of X"
+#     option_list = BaseCommand.option_list + (
+#         make_option(
+#             "-f", 
+#             "--file", 
+#             dest = "filename",
+#             help = "specify import file", 
+#             metavar = "FILE"
+#         ),
+#     )
+
+#     option_list = option_list + (
+#         make_option(
+#             "-s", 
+#             "--slug", 
+#             dest = "category",
+#             help = "category slug", 
+#             metavar = "SLUG"
+#         ),
+#     )
+
+#     def handle(self, *args, **options):
+#             # make sure file option is present
+#             if options['filename'] == None :
+#                 raise CommandError("Option `--file=...` must be specified.")
+        
+#             # make sure file path resolves
+#             if not os.path.isfile(options['filename']) :
+#                 raise CommandError("File does not exist at the specified path.")
+    
+#             # make sure form option is present
+#             if options['category'] == None :
+#                 raise CommandError("Option `--slug=...` must be specified.")
+
+
+
+
+
+
+
 # future check: https://pypi.org/project/django-bulk-update-or-create/
 
 class Command(BaseCommand):

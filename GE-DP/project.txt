@@ -119,7 +119,7 @@ Sem espacos
 
 
 
-25 Agosto
+22 Agosto
 - teste com 9gb de dataset
 - Sincronizar com icds
 - ajustar dados mestres
@@ -135,3 +135,4 @@ Sem espacos
 Estudar sobre IRB
 Acomparnhar a GOLL4
 
+23 Agosto
