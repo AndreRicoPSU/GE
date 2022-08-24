@@ -1,27 +1,25 @@
-
-import time
-from tokenize import group
-from ge.models import Category, DSTColumn, Group, KeyHierarchy, KeyLink, Keyge, Dataset, KeyWord, Database, LogsCollector, PrefixOpc, WFControl, WordMap
-
-from django.core.management.base import BaseCommand
-
 import os
 import sys
-import time
 import pandas as pd
-from django.conf import settings
 from django.core.management.base import BaseCommand
-from ge.models import Dataset, DSTColumn, WFControl, KeyWord
 from django.core.exceptions import ObjectDoesNotExist
+from ge.models import Category, DSTColumn, Group, KeyHierarchy, KeyLink, Keyge, Dataset, KeyWord, Database, LogsCollector, PrefixOpc, WFControl, WordMap
 
-
+# Uptades aren't works:
+# from django_bulk_update import bulk_update   https://pypi.org/project/django-bulk-update/
 
 """ 
 Process to maintain the content of the Igem Database
 
+Pendencies:
+- Create subprocess to update
+- Create subprocess to delete with args
+- Uptade the docs
+
+
 --subprocess:
     1. show
-    2. delete
+    2. truncate
     3. download
     4. load
 
@@ -34,7 +32,7 @@ Process to maintain the content of the Igem Database
     6. key_category
     7. key_group
     8. key_prefix
-    9. key_word
+    9. keyword
     10. link_key
     11. link_word
 
@@ -52,18 +50,16 @@ Process to maintain the content of the Igem Database
 --path
     file path and name to read and write from ge.db
 
-Sintaxes:
+Syntaxes:
 python manage.py db {--subprocess} {table} {--field} {field_value} {--path} {file_path}
 
     python manage.py db --show workflow --dataset all
-    python manage.py db --delete dataset --dataset all
+    python manage.py db --truncate dataset --dataset all
     python manage.py db --download keyge --keyge all --path xxxx
     python manage.py db --load dataset --path xxxxx
 
 
-Premissas
-    Mesmo layout entre o download
-    Validar os campos
+
 """
 
 
@@ -73,7 +69,6 @@ class Command(BaseCommand):
     help = 'Process to maintain the content of the Igem Database'
 
     def add_arguments(self, parser):
-
 
         # subpreocess
         parser.add_argument(
@@ -85,7 +80,7 @@ class Command(BaseCommand):
             help='show data on tables',
         )
         parser.add_argument(
-            '--delete',
+            '--truncate',
             type=str,
             metavar='table',
             action='store',
@@ -218,7 +213,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.HTTP_BAD_REQUEST('  Database not found'))
                 sys.exit(2)
             if not qs_database:
-                self.stdout.write(self.style.HTTP_BAD_REQUEST('  Database not found'))
+                self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in Database table'))
                 sys.exit(2)
             return qs_database
 
@@ -232,7 +227,7 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.HTTP_BAD_REQUEST('  Database not found'))
                     sys.exit(2)
                 if not QS_DB:                     
-                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  Database not found'))
+                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in Dataset table'))
                     sys.exit(2)
             if v_database != 'all' and v_dataset != 'all': 
                 v_where_cs = {'database': v_db_id, 'dataset': v_dataset}
@@ -248,7 +243,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.HTTP_BAD_REQUEST('  Dataset not found'))
                 sys.exit(2)
             if not QS:
-                self.stdout.write(self.style.HTTP_BAD_REQUEST('  Dataset not found'))
+                self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in Dataset table'))
                 sys.exit(2)
             return QS
 
@@ -262,7 +257,7 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.HTTP_BAD_REQUEST('  Dataset not found'))
                     sys.exit(2)
                 if not QS_DB:                     
-                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  Dataset not found'))
+                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in Dataset table'))
                     sys.exit(2)
             if v_dataset != 'all': 
                 v_where_cs = {'dataset': v_db_id}
@@ -274,7 +269,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.HTTP_BAD_REQUEST('  Dataset not found'))
                 sys.exit(2)
             if not QS:
-                self.stdout.write(self.style.HTTP_BAD_REQUEST('  Dataset not found'))
+                self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in DSTColumn table'))
                 sys.exit(2)
             return QS
 
@@ -288,7 +283,7 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.HTTP_BAD_REQUEST('  Dataset not found'))
                     sys.exit(2)
                 if not QS_DB:                     
-                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  Dataset not found'))
+                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in Dataset table'))
                     sys.exit(2)
             if v_dataset != 'all': 
                 v_where_cs = {'dataset': v_db_id}
@@ -300,7 +295,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.HTTP_BAD_REQUEST('  Dataset not found'))
                 sys.exit(2)
             if not QS:
-                self.stdout.write(self.style.HTTP_BAD_REQUEST('  Dataset not found'))
+                self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in WorkFlow table'))
                 sys.exit(2)
             return QS            
 
@@ -314,7 +309,7 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.HTTP_BAD_REQUEST('  Group not found'))
                     sys.exit(2)
                 if not QS_DB:                     
-                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  Group not found'))
+                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in Group table'))
                     sys.exit(2)
             if v_category != 'all':
                 try:
@@ -325,7 +320,7 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.HTTP_BAD_REQUEST('  Category not found'))
                     sys.exit(2)
                 if not QS_DB:                     
-                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  Category not found'))
+                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in Category table'))
                     sys.exit(2)
             if v_group != 'all' and v_category != 'all': 
                 v_where_cs = {'group': v_id_group, 'category': v_id_cat}
@@ -341,7 +336,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.HTTP_BAD_REQUEST('  Keyge not found'))
                 sys.exit(2)
             if not QS:
-                self.stdout.write(self.style.HTTP_BAD_REQUEST('  Keyge not found'))
+                self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in Keyge table'))
                 sys.exit(2)
             return QS
 
@@ -352,7 +347,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.HTTP_BAD_REQUEST('  Category not found'))
                 sys.exit(2)
             if not QS:
-                self.stdout.write(self.style.HTTP_BAD_REQUEST('  Category not found'))
+                self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in Category table'))
                 sys.exit(2)
             return QS
 
@@ -363,7 +358,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.HTTP_BAD_REQUEST('  Group not found'))
                 sys.exit(2)
             if not QS:
-                self.stdout.write(self.style.HTTP_BAD_REQUEST('  Group not found'))
+                self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in Group table'))
                 sys.exit(2)
             return QS
 
@@ -374,11 +369,11 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.HTTP_BAD_REQUEST('  Prefix not found'))
                 sys.exit(2)
             if not QS:
-                self.stdout.write(self.style.HTTP_BAD_REQUEST('  Prefix not found'))
+                self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in Prefix table'))
                 sys.exit(2)
             return QS
 
-        def get_key_word(*args):
+        def get_keyword(*args):
             if v_word != 'all':
                 v_where_cs = {'word__contains': v_word } # %like%
             else:
@@ -389,7 +384,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.HTTP_BAD_REQUEST('  Word not found'))
                 sys.exit(2)
             if not QS:
-                self.stdout.write(self.style.HTTP_BAD_REQUEST('  Word not found'))
+                self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in KeyWord table'))
                 sys.exit(2)
             return QS
 
@@ -404,7 +399,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.HTTP_BAD_REQUEST('  Word not found'))
                 sys.exit(2)
             if not QS:
-                self.stdout.write(self.style.HTTP_BAD_REQUEST('  Word not found'))
+                self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in KeyLinks table'))
                 sys.exit(2)
             return QS
 
@@ -419,7 +414,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.HTTP_BAD_REQUEST('  Word not found'))
                 sys.exit(2)
             if not QS:
-                self.stdout.write(self.style.HTTP_BAD_REQUEST('  Word not found'))
+                self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in WordMap table'))
                 sys.exit(2)
             return QS
 
@@ -505,9 +500,9 @@ class Command(BaseCommand):
                 for qs in QS:                      
                     self.stdout.write(self.style.HTTP_SUCCESS(f'{f"{qs.pre_value}":<15}')) 
 
-            elif v_table == 'key_word':
+            elif v_table == 'keyword':
                 v_word = str(options['word']).lower()
-                QS = get_key_word(v_word)          
+                QS = get_keyword(v_word)          
                 self.stdout.write(self.style.HTTP_INFO(f'{f"STATUS":<10}{f"COMMUTE":<10}{f"KEYGE":<40}{f"WORD":<50}')) 
                 for qs in QS:                   
                     self.stdout.write(self.style.HTTP_SUCCESS(f'{f"{qs.status}":<10}{f"{qs.commute}":<10}{f"{qs.keyge}":<40}{f"{qs.word}":<50}')) 
@@ -524,17 +519,17 @@ class Command(BaseCommand):
 
 
 
-        # READ BLOCK
+        # DOWNLOAD BLOCK
         if options['download']:
 
             v_path = str(options['path']).lower()
             v_table = str(options['download']).lower()
 
             if v_path == None:
-                self.stdout.write(self.style.HTTP_BAD_REQUEST('Inform the path to download'))
+                self.stdout.write(self.style.HTTP_BAD_REQUEST('  Inform the path to download'))
                 sys.exit(2)
             if not os.path.isdir(v_path) :
-                self.stdout.write(self.style.HTTP_BAD_REQUEST('Path not found'))
+                self.stdout.write(self.style.HTTP_BAD_REQUEST('  Path not found'))
                 sys.exit(2)
             v_file = v_path + "/" + v_table + ".csv"
 
@@ -543,139 +538,397 @@ class Command(BaseCommand):
                 QS = get_database(v_database)
                 DF = convert_to_dataframe(QS, fields=['database','description','website','category'], index=False)
                 DF.to_csv(v_file, index=False)                  
-                self.stdout.write(self.style.SUCCESS('File generated successfully'))
+                self.stdout.write(self.style.SUCCESS('  File generated successfully'))
 
-            if v_table == 'dataset':
+            elif v_table == 'dataset':
                 v_database =  str(options['database']).lower()
                 v_dataset = str(options['dataset']).lower()
-                QS = get_dataset(v_database, v_dataset)
+                QS = get_dataset(v_database, v_dataset)             
                 DF = convert_to_dataframe(QS, fields=['database','dataset','update_ds','source_path','source_web','source_compact','source_file_name','source_file_format','source_file_sep','source_file_skiprow','target_file_name','target_file_format','description'], index=False)
+                # Data transformations rules
+                 # Rule 1: Transform Database ID to Database Name
+                try:
+                    DF_DB = pd.DataFrame(list(Database.objects.values('id', 'database').order_by('id')))
+                except:
+                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  Database not found'))
+                    sys.exit(2)
+                if DF_DB.empty:                     
+                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in Dataset table'))
+                    sys.exit(2)
+                DF["database"] = DF.set_index("database").index.map(DF_DB.set_index("id")["database"])
                 DF.to_csv(v_file, index=False)                  
-                self.stdout.write(self.style.SUCCESS('File generated successfully'))
+                self.stdout.write(self.style.SUCCESS('  File generated successfully'))  
 
-            if v_table == 'ds_column':
+            elif v_table == 'ds_column':
                 v_dataset = str(options['dataset']).lower()
                 QS = get_ds_column(v_dataset)
                 DF = convert_to_dataframe(QS, fields=['dataset','status','column_number','column_name','pre_value'], index=False)
+                # Data transformations rules
+                 # Rule 1: Transform Dataset ID to Dataset Name
+                try:
+                    DF_DB = pd.DataFrame(list(Dataset.objects.values('id', 'dataset').order_by('id')))
+                except:
+                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  Dataset not found'))
+                    sys.exit(2)
+                if DF_DB.empty:                     
+                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in Dataset table'))
+                    sys.exit(2)
+                DF["dataset"] = DF.set_index("dataset").index.map(DF_DB.set_index("id")["dataset"])
+                
                 DF.to_csv(v_file, index=False)                  
-                self.stdout.write(self.style.SUCCESS('File generated successfully'))
+                self.stdout.write(self.style.SUCCESS('  File generated successfully'))
 
-            if v_table == 'workflow':
+            elif v_table == 'workflow':
                 v_dataset = str(options['dataset']).lower()
                 QS = get_workflow(v_dataset)
                 DF = convert_to_dataframe(QS, fields=['dataset','last_update','source_file_version','source_file_size','target_file_size','chk_collect','chk_prepare','chk_map','chk_reduce'], index=False)
                 DF.to_csv(v_file, index=False)                  
-                self.stdout.write(self.style.SUCCESS('File generated successfully'))
+                self.stdout.write(self.style.SUCCESS('  File generated successfully'))
 
-            if v_table == 'keyge':
+            elif v_table == 'keyge':
                 v_group = str(options['group']).lower()
                 v_category = str(options['category']).lower()
                 QS = get_keyge(v_group, v_category)
                 DF = convert_to_dataframe(QS, fields=['keyge','group','category','description'], index=False)
+                # Data transformations rules
+                 # Rule 1: Transform Group ID to Group Name
+                try:
+                    DF_DB = pd.DataFrame(list(Group.objects.values('id', 'group').order_by('id')))
+                except:
+                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  Group not found'))
+                    sys.exit(2)
+                if DF_DB.empty:                     
+                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in Group table'))
+                    sys.exit(2)
+                DF["group"] = DF.set_index("group").index.map(DF_DB.set_index("id")["group"])
+                # Rule 2: Transform Category ID to Category Name
+                try:
+                    DF_DB = pd.DataFrame(list(Category.objects.values('id', 'category').order_by('id')))
+                except:
+                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  Category not found'))
+                    sys.exit(2)
+                if DF_DB.empty:                     
+                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in Category table'))
+                    sys.exit(2)
+                DF["category"] = DF.set_index("category").index.map(DF_DB.set_index("id")["category"])
                 DF.to_csv(v_file, index=False)                  
-                self.stdout.write(self.style.SUCCESS('File generated successfully'))
+                self.stdout.write(self.style.SUCCESS('  File generated successfully'))
 
-            if v_table == 'category':
+            elif v_table == 'category':
                 QS = get_category()
                 DF = convert_to_dataframe(QS, fields=['category','description'], index=False)
                 DF.to_csv(v_file, index=False)                  
-                self.stdout.write(self.style.SUCCESS('File generated successfully'))
+                self.stdout.write(self.style.SUCCESS('  File generated successfully'))
 
-            if v_table == 'group':
+            elif v_table == 'group':
                 QS = get_group()
                 DF = convert_to_dataframe(QS, fields=['group','description'], index=False)
                 DF.to_csv(v_file, index=False)                  
-                self.stdout.write(self.style.SUCCESS('File generated successfully'))
+                self.stdout.write(self.style.SUCCESS('  File generated successfully'))
 
-            if v_table == 'prefix':
+            elif v_table == 'prefix':
                 QS = get_prefix()
                 DF = convert_to_dataframe(QS, fields=['pre_value'], index=False)
                 DF.to_csv(v_file, index=False)                  
-                self.stdout.write(self.style.SUCCESS('File generated successfully'))
+                self.stdout.write(self.style.SUCCESS('  File generated successfully'))
 
-            if v_table == 'key_word':
+            elif v_table == 'keyword':
                 v_word = str(options['word']).lower()
-                QS = get_key_word(v_word)
+                QS = get_keyword(v_word)
                 DF = convert_to_dataframe(QS, fields=['status','commute','word','keyge'], index=False)
+                # Data transformations rules
+                 # Rule 1: Transform keyge ID to keyge Name
+                try:
+                    DF_DB = pd.DataFrame(list(Keyge.objects.values('id', 'keyge').order_by('id')))
+                except:
+                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  Keyge not found'))
+                    sys.exit(2)
+                if DF_DB.empty:                     
+                    self.stdout.write(self.style.HTTP_BAD_REQUEST('  No data in Keyge table'))
+                    sys.exit(2)
+                DF["keyge"] = DF.set_index("keyge").index.map(DF_DB.set_index("id")["keyge"])
                 DF.to_csv(v_file, index=False)                  
-                self.stdout.write(self.style.SUCCESS('File generated successfully'))
+                self.stdout.write(self.style.SUCCESS('  File generated successfully'))
 
             elif v_table == 'link_key':
                 v_word = str(options['word']).lower()
                 QS = get_link_key(v_word)
                 DF = convert_to_dataframe(QS, fields=['ckey', 'dataset', 'keyge1', 'keyge1__keyge', 'keyge2', 'keyge2__keyge', 'count', ], index=False)
                 DF.to_csv(v_file, index=False)                  
-                self.stdout.write(self.style.SUCCESS('File generated successfully'))
+                self.stdout.write(self.style.SUCCESS('  File generated successfully'))
             
             elif v_table == 'wordmap':
                 v_word = str(options['word']).lower()
                 QS = get_wordmap(v_word)
                 DF = convert_to_dataframe(QS, fields=['cword','database','dataset','keyge1','keyge2','word1','word2','count'], index=False)
                 DF.to_csv(v_file, index=False)                  
-                self.stdout.write(self.style.SUCCESS('File generated successfully'))
+                self.stdout.write(self.style.SUCCESS('  File generated successfully'))
             
             else:
                 self.stdout.write(self.style.HTTP_NOT_FOUND('Table not recognized in the system. Choose one of the options: '))
                 self.stdout.write(self.style.HTTP_NOT_FOUND('   database | dataset | ds_column | workflow | keyge | category | group | prefix | key_word | link_key | wordmap'))
 
-        # WHITE BLOCK
 
-        # Delete bock
-        if options['delete']:
-            #Only update registers will process = true
-            if  options['delete'] == 'all':   
-                KeyLink.truncate()
-                WordMap.truncate()
-                KeyWord.truncate()
-                KeyHierarchy.truncate()
-                Keyge.truncate()
-                Category.truncate()
-                Group.truncate()
-                LogsCollector.truncate()
-                WFControl.truncate()
-                DSTColumn.truncate()
-                PrefixOpc.truncate()
-                Dataset.truncate()
-                Database.truncate()
 
-            if  options['delete'] == 'keylinks':  
-                KeyLink.truncate()
+        # LOAD BLOCK
+        if options['load']:
+            v_table = str(options['load']).lower()
+            v_path = str(options['path']).lower()
 
-            if  options['delete'] == 'wordmap':  
-                WordMap.truncate()
+            if v_path == None:
+                self.stdout.write(self.style.HTTP_BAD_REQUEST('  Inform the path to load'))
+                sys.exit(2)
+            if not os.path.isfile(v_path) :
+                self.stdout.write(self.style.HTTP_BAD_REQUEST('  File not found'))
+                self.stdout.write(self.style.HTTP_BAD_REQUEST('  Inform the path and the file in CSV format to load'))
+                sys.exit(2)
 
-            if  options['delete'] == 'keyword':                  
-                KeyWord.truncate()
+            if v_table == 'database':
+                try:
+                    DFR = pd.read_csv(v_path)
+                    DFR = DFR.apply(lambda x: x.astype(str).str.lower()) 
+                except IOError as e:
+                    self.stdout.write(self.style.ERROR('ERRO:')) 
+                    print(e)
+                    sys.exit(2)
+                model_instances = [Database(
+                    database = record.database,
+                    description = record.description,
+                    category = record.category,
+                    website = record.website,
+                    ) for record in DFR.itertuples()]
+                Database.objects.bulk_create(model_instances, ignore_conflicts=True)        
+                self.stdout.write(self.style.SUCCESS('  Load with success to Database'))
+
+            elif v_table == 'dataset':                  
+                try:
+                    DFR = pd.read_csv(v_path)
+                    DFR['database'] = DFR['database'].str.lower()
+                    DFR['dataset'] = DFR['dataset'].str.lower()
+                except IOError as e:
+                    self.stdout.write(self.style.ERROR('ERRO:')) 
+                    print(e)
+                    sys.exit(2)
+                DFDB = pd.DataFrame(list(Database.objects.values()))
+                DFR["db_id"] = DFR.set_index("database").index.map(DFDB.set_index("database")["id"])
+                # tratar se nao localizar
+                model_instances = [Dataset(
+                    dataset = record.dataset,
+                    database_id = record.db_id,
+                    description = record.description,
+                    update_ds = record.update_ds,
+                    source_path = record.source_path,
+                    source_web = record.source_web,
+                    source_compact = record.source_compact,
+                    source_file_name = record.source_file_name,
+                    source_file_format = record.source_file_format,
+                    source_file_sep = record.source_file_sep,
+                    source_file_skiprow = record.source_file_skiprow,
+                    target_file_name = record.target_file_name,
+                    target_file_format = record.target_file_format,
+                ) for record in DFR.itertuples()]
+                Dataset.objects.bulk_create(model_instances, ignore_conflicts=True)        
+                self.stdout.write(self.style.SUCCESS('  Load with success to Dataset'))
                 
-            if  options['delete'] == 'keyhierarchy':                  
-                KeyHierarchy.truncate()
+            elif v_table == 'ds_column':                  
+                try:
+                    DFR = pd.read_csv(v_path)
+                    DFR = DFR.apply(lambda x: x.astype(str).str.lower()) 
+                except IOError as e:
+                    self.stdout.write(self.style.ERROR('ERRO:')) 
+                    print(e)
+                    sys.exit(2)
+                DFG = pd.DataFrame(list(Dataset.objects.values()))
+                DFR["dataset"] = DFR.set_index("dataset").index.map(DFG.set_index("dataset")["id"])
+                DFR['status'] = DFR['status'].replace('false', 'False')
+                DFR['status'] = DFR['status'].replace('true', 'True')
+                if DFR.isnull().values.any():
+                    self.stdout.write(self.style.ERROR('  Dataset was not match on Database')) 
+                    sys.exit(2)
+                model_instances = [DSTColumn(
+                    dataset_id = record.dataset,
+                    status = record.status,
+                    column_number = record.column_number,
+                    column_name = record.column_name,
+                    pre_value_id = record.pre_value
+                    ) for record in DFR.itertuples()]
+                DSTColumn.objects.bulk_create(model_instances, ignore_conflicts=True) 
+                self.stdout.write(self.style.SUCCESS('  Load with success to DSTColumn'))
 
-            if  options['delete'] == 'keyge':  
-                Keyge.truncate()
+            elif v_table == 'keyge':  
+                try:
+                    DFR = pd.read_csv(v_path)
+                    DFR = DFR.apply(lambda x: x.astype(str).str.lower()) 
+                except IOError as e:
+                    self.stdout.write(self.style.ERROR('ERRO:')) 
+                    print(e)
+                    sys.exit(2)
+                DFG = pd.DataFrame(list(Group.objects.values()))
+                DFC = pd.DataFrame(list(Category.objects.values()))
+                DFR["group_id"] = DFR.set_index("group").index.map(DFG.set_index("group")["id"])
+                DFR["category_id"] = DFR.set_index("category").index.map(DFC.set_index("category")["id"])
+                if DFR.isnull().values.any():
+                    self.stdout.write(self.style.ERROR('  Group and/or Category was not match on Database')) 
+                    sys.exit(2)
+                model_instances = [Keyge(
+                    keyge = record.keyge,
+                    category_id = record.category_id,
+                    group_id = record.group_id,
+                    description = record.description,
+                    ) for record in DFR.itertuples()]
+                Keyge.objects.bulk_create(model_instances, ignore_conflicts=True) 
+                self.stdout.write(self.style.SUCCESS('  Load with success to Keyge'))
 
-            if  options['delete'] == 'category':  
-                Category.truncate()
+            elif v_table == 'category':  
+                try:
+                    DFR = pd.read_csv(v_path)
+                    DFR = DFR.apply(lambda x: x.astype(str).str.lower()) 
+                except IOError as e:
+                    self.stdout.write(self.style.ERROR('ERRO:')) 
+                    print(e)
+                    sys.exit(2)
+                model_instances = [Category(
+                    category = record.category,
+                    description = record.description,
+                    ) for record in DFR.itertuples()]
+                Category.objects.bulk_create(model_instances, ignore_conflicts=True)
+                self.stdout.write(self.style.SUCCESS('  Load with success to Category'))
 
-            if  options['delete'] == 'group':  
-                Group.truncate()
+            elif v_table == 'group':  
+                try:
+                    DFR = pd.read_csv(v_path)
+                    DFR = DFR.apply(lambda x: x.astype(str).str.lower()) 
+                except IOError as e:
+                    self.stdout.write(self.style.ERROR('ERRO:')) 
+                    print(e)
+                    sys.exit(2)
+                model_instances = [Group(
+                    group = record.group,
+                    description = record.description,
+                    ) for record in DFR.itertuples()]
+                Group.objects.bulk_create(model_instances, ignore_conflicts=True) 
+                self.stdout.write(self.style.SUCCESS('  Load with success to Group'))
 
-            if  options['delete'] == 'logs':  
-                LogsCollector.truncate()
-                
-            if  options['delete'] == 'workflow':  
-                WFControl.truncate()
+            elif v_table == 'prefix':  
+                try:
+                    DFR = pd.read_csv(v_path)
+                    DFR = DFR.apply(lambda x: x.astype(str).str.lower()) 
+                except IOError as e:
+                    self.stdout.write(self.style.ERROR('ERRO:')) 
+                    print(e)
+                    sys.exit(2)
+                model_instances = [PrefixOpc(
+                    pre_value = record.pre_value,
+                    ) for record in DFR.itertuples()]
+                PrefixOpc.objects.bulk_create(model_instances, ignore_conflicts=True) 
+                self.stdout.write(self.style.SUCCESS('  Load with success to Prefix'))
 
-            if  options['delete'] == 'dst':  
-                DSTColumn.truncate()
+            elif v_table == 'keyword':       
+                try:
+                    DFR = pd.read_csv(v_path)
+                    DFR = DFR.apply(lambda x: x.astype(str).str.lower()) 
+                except IOError as e:
+                    self.stdout.write(self.style.ERROR('ERRO:')) 
+                    print(e)
+                    sys.exit(2)  
+                DFK = pd.DataFrame(list(Keyge.objects.values()))
+                DFR["keyge_id"] = DFR.set_index("keyge").index.map(DFK.set_index("keyge")["id"])
+                DFR['status'] = DFR['status'].replace('false', 'False')
+                DFR['status'] = DFR['status'].replace('true', 'True')
+                DFR['commute'] = DFR['commute'].replace('false', 'False')
+                DFR['commute'] = DFR['commute'].replace('true', 'True')
+                if DFR.isnull().values.any():
+                    self.stdout.write(self.style.ERROR('  Keyge was not match on Database')) 
+                    sys.exit(2)
+                model_instances = [KeyWord(
+                    keyge_id = record.keyge_id,
+                    word = record.word,
+                    status = record.status,
+                    commute = record.commute,
+                    ) for record in DFR.itertuples()]
+                KeyWord.objects.bulk_create(model_instances, ignore_conflicts=True) 
+                self.stdout.write(self.style.SUCCESS('  Load with success to KeyWords'))
 
-            if  options['delete'] == 'prefix':  
-                PrefixOpc.truncate()
+            else:
+                self.stdout.write(self.style.HTTP_NOT_FOUND('Table not recognized in the system. Choose one of the options: '))
+                self.stdout.write(self.style.HTTP_NOT_FOUND('   database | dataset | ds_column | keyge | category | group | prefix | keywords'))
 
-            if  options['delete'] == 'dataset':  
-                Dataset.truncate()
-
-            if  options['delete'] == 'database':  
-                Database.truncate()
      
+
+        # DELETE BLOCK
+        if options['truncate']:
+            v_table = str(options['truncate']).lower()
+
+            if v_table == 'all':   
+                KeyLink.truncate()
+                WordMap.truncate()
+                KeyWord.truncate()
+                KeyHierarchy.truncate()
+                Keyge.truncate()
+                Category.truncate()
+                Group.truncate()
+                LogsCollector.truncate()
+                WFControl.truncate()
+                DSTColumn.truncate()
+                PrefixOpc.truncate()
+                Dataset.truncate()
+                Database.truncate()
+                self.stdout.write(self.style.ERROR('  All tables deleted'))
+
+            elif v_table == 'keylinks':  
+                KeyLink.truncate()
+                self.stdout.write(self.style.ERROR('  Keylinks table deleted'))
+
+            elif v_table == 'wordmap':  
+                WordMap.truncate()
+                self.stdout.write(self.style.ERROR('  WordMap table deleted'))
+
+            elif v_table == 'keyword':                  
+                KeyWord.truncate()
+                self.stdout.write(self.style.ERROR('  KeyWord table deleted'))
+                
+            elif v_table == 'keyhierarchy':                  
+                KeyHierarchy.truncate()
+                self.stdout.write(self.style.ERROR('  Hierarchy table deleted'))
+
+            elif v_table == 'keyge':  
+                Keyge.truncate()
+                self.stdout.write(self.style.ERROR('  Keyge table deleted'))
+
+            elif v_table == 'category':  
+                Category.truncate()
+                self.stdout.write(self.style.ERROR('  Category table deleted'))
+
+            elif v_table == 'group':  
+                Group.truncate()
+                self.stdout.write(self.style.ERROR('  Group table deleted'))
+
+            elif v_table == 'logs':  
+                LogsCollector.truncate()
+                self.stdout.write(self.style.ERROR('  Logs table deleted'))
+                
+            elif v_table == 'workflow':  
+                WFControl.truncate()
+                self.stdout.write(self.style.ERROR('  WorkFlow table deleted'))
+
+            elif v_table == 'dst':  
+                DSTColumn.truncate()
+                self.stdout.write(self.style.ERROR('  Ds Column table deleted'))
+
+            elif v_table == 'prefix':  
+                PrefixOpc.truncate()
+                self.stdout.write(self.style.ERROR('  Prefix table deleted'))
+
+            elif v_table == 'dataset':  
+                Dataset.truncate()
+                self.stdout.write(self.style.ERROR('  Dataset table deleted'))
+
+            elif v_table == 'database':  
+                Database.truncate()
+                self.stdout.write(self.style.ERROR('  Database table deleted'))
+     
+            else:
+                self.stdout.write(self.style.HTTP_NOT_FOUND('Table not recognized in the system. Choose one of the options: '))
+                self.stdout.write(self.style.HTTP_NOT_FOUND('   database | dataset | ds_column | workflow | keyge | category | group | prefix | key_word | link_key | wordmap'))
 
      
